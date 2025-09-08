@@ -72,3 +72,45 @@ companies_to_value = {
     # Consumer Goods / Food (Nestle)
     "NESN.SW": ["UL", "RBGLY", "DANOY", "MDLZ"]
 }
+
+# --- Data Preparation ---
+try:
+    # Read the CSV file containing deal information
+    df = pd.read_csv('sample_deals_yahoo.csv')
+except FileNotFoundError:
+    print("✗ Error: The file 'sample_deals_yahoo.csv' was not found.")
+    exit()
+
+# Define the required columns and check for their existence
+required_columns = ['ticker', 'price_ev_w', 'price_pe_w', 'price_ps_w']
+if not all(col in df.columns for col in required_columns):
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    print(f"✗ Error: The following required columns are missing from the file: {', '.join(missing_cols)}")
+    exit()
+
+# Select only the necessary columns and drop rows with missing values
+combined_df = df[required_columns].dropna()
+
+# Convert numerical columns to float, handling potential comma-based decimals
+try:
+    for col in ['price_ev_w', 'price_pe_w', 'price_ps_w']:
+        combined_df.loc[:, col] = combined_df[col].astype(str).str.replace(',', '.').astype(float)
+except ValueError as e:
+    print(f"✗ Error converting data to numeric format: {e}")
+    print("Please ensure that the 'price_ev_w', 'price_pe_w', and 'price_ps_w' columns contain only numerical values.")
+    exit()
+
+# Convert the DataFrame to a dictionary mapping tickers to their weights.
+# The weights are used to determine the importance of each valuation method.
+weights = {deal[0]: deal[1:] for deal in combined_df.drop_duplicates().values.tolist()}
+
+# A new dictionary to store only the companies that have corresponding data in the CSV file
+companies_to_evaluate = {}
+for deal in combined_df.drop_duplicates().values.tolist():
+    ticker = deal[0]
+    if ticker in companies_to_value:
+        companies_to_evaluate[ticker] = companies_to_value[ticker]
+    else:
+        print(f"Ticker {ticker} is not in the peer valuation database.")
+        continue
+
