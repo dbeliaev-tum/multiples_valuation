@@ -114,3 +114,20 @@ for deal in combined_df.drop_duplicates().values.tolist():
         print(f"Ticker {ticker} is not in the peer valuation database.")
         continue
 
+# --- Core Functions ---
+
+@lru_cache(maxsize=None)
+def get_exchange_rate(currency_from: str, currency_to: str) -> Optional[float]:
+    """Fetches the exchange rate between two currencies using yfinance."""
+    if currency_from == currency_to:
+        return 1.0
+
+    ticker = f"{currency_from}{currency_to}=X"
+    try:
+        data = yf.Ticker(ticker)
+        rate = data.info.get('regularMarketPrice')
+        if rate:
+            return rate
+    except Exception as e:
+        print(f"✗ Failed to get exchange rate for {ticker}: {e}")
+    return None
