@@ -131,3 +131,31 @@ def get_exchange_rate(currency_from: str, currency_to: str) -> Optional[float]:
     except Exception as e:
         print(f"✗ Failed to get exchange rate for {ticker}: {e}")
     return None
+
+def safe_float(value) -> Optional[float]:
+    """Safely converts a value to a float, returning None on failure."""
+    try:
+        return float(value) if value is not None else None
+    except (ValueError, TypeError):
+        return None
+
+def get_value(data: pd.DataFrame, keys: List[str]) -> Optional[float]:
+    """Retrieves a value from a financial data DataFrame using a list of potential keys."""
+    try:
+        if data is None or data.empty:
+            return None
+
+        # Ensure keys is always a list
+        keys = [keys] if isinstance(keys, str) else keys
+
+        for k in keys:
+            if k in data.index:
+                try:
+                    series = data.loc[k].dropna()
+                    if not series.empty:
+                        return safe_float(series.iloc[0])
+                except:
+                    continue
+        return None
+    except Exception:
+        return None
