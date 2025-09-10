@@ -159,3 +159,61 @@ def get_value(data: pd.DataFrame, keys: List[str]) -> Optional[float]:
         return None
     except Exception:
         return None
+
+def get_company_data(ticker: str, verbose: bool = True) -> dict:
+    """
+    Fetches key financial data for a company from Yahoo Finance and converts it to EUR.
+
+    Args:
+        ticker: The company's ticker symbol.
+        verbose: If True, prints status updates.
+    """
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info or {}
+
+        # Determine the company's base currency and get the exchange rate to EUR
+        currency = info.get('currency', 'USD')
+        euro_rate = get_exchange_rate(currency, 'EUR')
+        if not euro_rate:
+            if verbose:
+                print(f"✗ Could not get the exchange rate for {currency}. Using original data.")
+            euro_rate = 1.0
+
+        balance_sheet = t.balance_sheet
+        financials = t.financials
+
+        # Get the core data points
+        price = info.get('currentPrice') or info.get('regularMarketPrice')
+        shares = info.get('sharesOutstanding')
+        debt = info.get('totalDebt') or get_value(balance_sheet, ["Total Debt"])
+        cash = info.get('cash') or get_value(balance_sheet, ["Cash And Cash Equivalents", "Cash"])
+        ebitda = info.get('ebitda') or get_value(financials, ["EBITDA", "Ebitda"]) or get_value(financials, ["EBIT"])
+        revenue = info.get('totalRevenue') or get_value(financials, ["Total Revenue"])
+        eps = info.get('trailingEps')
+
+        # Convert to float and apply the EUR exchange rate
+        price_f = safe_float(price)
+        shares_f = safe_float(shares)
+
+        debt_f = safe_float(debt) * euro_rate if safe_float(debt) is not None else None
+        cash_f = safe_float(cash) * euro_rate if safe_float(cash) is not None else None
+        ebitda_f = safe_float(ebitda) * euro_rate if safe_float(ebitda) is not None else None
+        revenue_f = safe_float(revenue) * euro_rate if safe_float(revenue) is not None else None
+        eps_f = safe_float(eps) * euro_rate if safe_float(eps) is not None else None
+
+        return {
+            'price': price_f,
+            'shares': shares_f,
+            'debt': debt_f,
+            'cash': cash_f,
+            'ebitda': ebitda_f,
+            'revenue': revenue_f,
+            'eps': eps_f,
+            'name': info.get('longName', ticker),
+            'success': True
+        }
+    except Exception as e:
+        if verbose:
+            print(f"✗ Error fetching data for {ticker}: {e}")
+        return {'success': False, 'ticker': ticker}
