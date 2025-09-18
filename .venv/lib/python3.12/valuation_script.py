@@ -217,3 +217,71 @@ def get_company_data(ticker: str, verbose: bool = True) -> dict:
         if verbose:
             print(f"✗ Error fetching data for {ticker}: {e}")
         return {'success': False, 'ticker': ticker}
+
+def calculate_peer_multipliers(peers: List[str]) -> Dict:
+    """Calculates the average market multiples (EV/EBITDA, P/E, P/S) for a list of peer companies."""
+    ev_ebitda_list = []
+    p_e_list = []
+    p_s_list = []
+    successful_peers = []
+    failed_to_get_data = []
+
+    for ticker in peers:
+        # Use verbose=False to avoid cluttered output for peers
+        data = get_company_data(ticker, verbose=False)
+        if not data['success']:
+            failed_to_get_data.append(ticker)
+            continue
+
+        is_calculable = False
+
+        # EV/EBITDA calculation
+        if all(data.get(x) is not None for x in ['price', 'shares', 'debt', 'cash', 'ebitda']) and data['ebitda'] != 0:
+            ev = data['price'] * data['shares'] + data['debt'] - data['cash']
+            multiple = ev / data['ebitda']
+            if 0 < multiple < 50:
+                ev_ebitda_list.append(multiple)
+                is_calculable = True
+
+        # P/E calculation
+        if data.get('price') is not None and data.get('eps') is not None and data['eps'] != 0:
+            multiple = data['price'] / data['eps']
+            if 0 < multiple < 100:
+                p_e_list.append(multiple)
+                is_calculable = True
+
+        # P/S calculation
+        if (data.get('price') is not None and data.get('revenue') is not None and
+                data.get('shares') is not None and data['shares'] != 0):
+            sales_per_share = data['revenue'] / data['shares']
+            if sales_per_share != 0:
+                multiple = data['price'] / sales_per_share
+                if 0 < multiple < 40:
+                    p_s_list.append(multiple)
+                is_calculable = True
+
+        if is_calculable:
+            successful_peers.append(data['name'])
+            print(f"✔ Processed: {data['name']} ({ticker})")
+        else:
+            failed_to_get_data.append(data['name'])
+
+    # Calculate average multiples
+    result = {
+        'ev_ebitda': sum(ev_ebitda_list) / len(ev_ebitda_list) if ev_ebitda_list else None,
+        'p_e': sum(p_e_list) / len(p_e_list) if p_e_list else None,
+        'p_s': sum(p_s_list) / len(p_s_list) if p_s_list else None,
+        'successful_peers': successful_peers,
+        'peers_count': len(successful_peers)
+    }
+
+    print("\n--- AVERAGE MULTIPLES ---")
+    print(f"Average P/E: {result['p_e']:.2f}" if result['p_e'] else "N/A (No peer data)")
+    print(f"Average P/S: {result['p_s']:.2f}" if result['p_s'] else "N/A (No peer data)")
+    print(f"Average EV/EBITDA: {result['ev_ebitda']:.2f}" if result['ev_ebitda'] else "N/A (No peer data)")
+    print("-------------------------")
+
+    if failed_to_get_data:
+        print(f"⚠️ The following companies could not be used (no data): {', '.join(failed_to_get_data)}")
+
+    return result
