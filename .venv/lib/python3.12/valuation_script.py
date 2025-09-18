@@ -285,3 +285,88 @@ def calculate_peer_multipliers(peers: List[str]) -> Dict:
         print(f"⚠️ The following companies could not be used (no data): {', '.join(failed_to_get_data)}")
 
     return result
+
+def valuate_company(ticker: str, multipliers: Dict, weights: Dict) -> Dict:
+    """
+    Calculates a company's fair value based on average peer multiples.
+
+    Args:
+        ticker: The ticker of the target company.
+        multipliers: A dictionary of average peer multiples.
+        weights: A dictionary with user-defined weights for each ticker.
+    """
+    data = get_company_data(ticker, verbose=True)
+    if not data['success']:
+        return {'success': False, 'error': 'Failed to fetch target company data'}
+
+    # Get the valuation weights for the current ticker. Use default weights if not specified.
+    w_ev_ebitda, w_pe, w_ps = weights.get(ticker, (0.33, 0.33, 0.33))
+
+    final_fair_price = 0
+    total_weights = 0
+    calculations = {}
+
+    # Check for missing data and re-distribute weights if necessary
+    if multipliers['ev_ebitda'] is None or data['ebitda'] is None or data['shares'] is None or data['shares'] == 0:
+        print("⚠️ Insufficient data for EV/EBITDA. Its weight will be reallocated.")
+        if w_pe > 0:
+            w_pe += w_ev_ebitda / 2
+        if w_ps > 0:
+            w_ps += w_ev_ebitda / 2
+        w_ev_ebitda = 0
+
+    # EV/EBITDA method
+    if w_ev_ebitda > 0:
+        ev = multipliers['ev_ebitda'] * data['ebitda']
+        # Handle potential zero values
+        if data['shares'] != 0:
+            price_ev = (ev - (data['debt'] or 0) + (data['cash'] or 0)) / data['shares']
+            if price_ev > 0:
+                final_fair_price += price_ev * w_ev_ebitda
+                total_weights += w_ev_ebitda
+                calculations['ev_ebitda'] = price_ev
+
+    # P/E method
+    if multipliers['p_e'] is None or data['eps'] is None:
+        print("⚠️ Insufficient data for P/E. This method will not be used.")
+        w_pe = 0
+
+    if w_pe > 0:
+        price_pe = multipliers['p_e'] * data['eps']
+        if price_pe > 0:
+            final_fair_price += price_pe * w_pe
+            total_weights += w_pe
+            calculations['p_e'] = price_pe
+
+    # P/S method
+    if multipliers['p_s'] is None or data['revenue'] is None or data['shares'] is None or data['shares'] == 0:
+        print("⚠️ Insufficient data for P/S. This method will not be used.")
+        w_ps = 0
+
+    if w_ps > 0:
+        if data['shares'] != 0:
+            sales_per_share = data['revenue'] / data['shares']
+            if sales_per_share != 0:
+                price_ps = multipliers['p_s'] * sales_per_share
+                if price_ps > 0:
+                    final_fair_price += price_ps * w_ps
+                    total_weights += w_ps
+                    calculations['p_s'] = price_ps
+
+    if total_weights == 0:
+        return {'success': False, 'error': 'Not enough data to perform valuation'}
+
+    # Normalize weights and calculate the final weighted price
+    final_price = final_fair_price / total_weights
+
+    return {
+        'success': True,
+        'ticker': ticker,
+        'company_name': data['name'],
+        'current_price': data['price'],
+        'fair_price': round(final_price, 2),
+        'premium_discount': round((final_price / data['price'] - 1) * 100, 1) if data['price'] else None,
+        'calculations': calculations,
+        'peers_used': multipliers['successful_peers'],
+        'peers_count': multipliers['peers_count']
+    }
