@@ -370,3 +370,86 @@ def valuate_company(ticker: str, multipliers: Dict, weights: Dict) -> Dict:
         'peers_used': multipliers['successful_peers'],
         'peers_count': multipliers['peers_count']
     }
+
+def run_valuation(comparable_companies: Dict[str, List[str]], weights: Dict) -> List[Dict]:
+    """
+    Main function to run the valuation for a dictionary of companies.
+
+    Args:
+        comparable_companies: A dictionary mapping target tickers to a list of peer tickers.
+        weights: A dictionary of valuation weights for each ticker.
+    """
+    valuation_results = []
+    currency_symbol = "€"
+
+    for base_ticker, peers in comparable_companies.items():
+        base_company_data = get_company_data(base_ticker, verbose=False)
+        company_name = base_company_data.get('name', base_ticker)
+
+        print(f"\n{'=' * 50}")
+        print(f"VALUATION: {company_name} ({base_ticker})")
+        print(f"{'=' * 50}")
+
+        try:
+            print("Fetching peer company data...")
+            multipliers = calculate_peer_multipliers(peers)
+
+            if multipliers['peers_count'] == 0:
+                print(f"✗ Failed to get data for any peers for {base_ticker}")
+                continue
+
+            print(f"\nPeers found: {multipliers['peers_count']}")
+
+            print("Calculating fair price...")
+            valuation = valuate_company(base_ticker, multipliers, weights)
+
+            if valuation['success']:
+                current = valuation['current_price']
+                fair = valuation['fair_price']
+                difference = ((fair - current) / current) * 100 if current else None
+
+                print(f"✔ Current Price: {currency_symbol}{current:,.2f}")
+                print(f"✔ Fair Price: {currency_symbol}{fair:,.2f}")
+
+                valuation_results.append({
+                    "Ticker": base_ticker,
+                    "Company": valuation['company_name'],
+                    "Fair Price": fair,
+                    "Current Price": current,
+                    "Difference (%)": difference
+                })
+            else:
+                print(f"✗ Valuation error: {valuation.get('error', 'Unknown error')}")
+
+        except Exception as e:
+            error_msg = f"Critical error during valuation of {base_ticker}: {e}"
+            print(f"✗ {error_msg}")
+
+    # --- Print Final Summary Table ---
+    print(f"\n\n{'=' * 50}")
+    print("FINAL VALUATION SUMMARY")
+    print(f"{'=' * 50}")
+
+    if not valuation_results:
+        print("No companies were successfully valued.")
+        return []
+
+    # Sort results by the percentage difference in descending order
+    sorted_results = sorted(valuation_results,
+                            key=lambda x: x['Difference (%)'] if x['Difference (%)'] is not None else -math.inf,
+                            reverse=True)
+
+    # Create a DataFrame for a clean output
+    df_results = pd.DataFrame(sorted_results)
+
+    # Format columns for better readability
+    df_results['Fair Price'] = df_results['Fair Price'].apply(
+        lambda x: f"{currency_symbol}{x:,.2f}" if pd.notna(x) else "N/A")
+    df_results['Current Price'] = df_results['Current Price'].apply(
+        lambda x: f"{currency_symbol}{x:,.2f}" if pd.notna(x) else "N/A")
+    df_results['Difference (%)'] = df_results['Difference (%)'].apply(lambda x: f"{x:+.1f}%" if pd.notna(x) else "N/A")
+
+    # Print the final table
+    print(df_results.to_string(index=False))
+
+    return valuation_results
