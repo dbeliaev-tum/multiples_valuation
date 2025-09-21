@@ -4,11 +4,6 @@
 # using key market multiples like EV/EBITDA, P/E, and P/S. It fetches financial data from Yahoo Finance,
 # calculates average peer multiples, and then applies these to the target company to
 # estimate its fair value.
-#
-# Author: Denis Beliaev
-# Date: September 2025
-# License: MIT
-#
 # To install the required libraries, run:
 # pip install yfinance pandas
 #
@@ -453,3 +448,7 @@ def run_valuation(comparable_companies: Dict[str, List[str]], weights: Dict) -> 
     print(df_results.to_string(index=False))
 
     return valuation_results
+
+# --- Main Execution ---
+if __name__ == "__main__":
+    results = run_valuation(companies_to_evaluate, weights)
