@@ -1,45 +1,23 @@
 type,status,type,date,ticker,purchase_price,amount,title,industry,country,sum,current_price,current_sum,change,profit,fixed_profit,share,price_ev_w,price_pe_w,price_ps_w
-"purchase,open,Stock,24.02.2025,KO,""67,45"",1,Coca-Cola Co,Consumer Staples,United States,""67,45"",""59,2168766"",""59,2168766"",""-12,21%"",""-8,2331234"",-1,""76,01%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,03.03.2025,AIR.PA,""170,32"",""0,088069"",Airbus SE,Industrials,France,""14,99991208"",""179,78"",""15,83304482"",""5,55%"",""0,83313274"",,""100,00%"",""0,4"",""0,4"",""0,2"""
-"purchase,closed,Stock,03.03.2025,RHM.DE,1124,""0,013345"",Rheinmetall AG,Industrials,Germany,""14,99978"",,,,,,,""0,4"",""0,4"",""0,2"""
-"purchase,open,Stock,03.03.2025,LMT,""431,95"",""0,034726"",Lockheed Martin Corp,Industrials,United States,""14,9998957"",""391,0854542"",""13,58083348"",""-9,46%"",""-1,419062217"",,""58,45%"",""0,4"",""0,4"",""0,2"""
-"purchase,open,Stock,03.03.2025,KO,""68,13"",""0,220167"",Coca-Cola Co,Consumer Staples,United States,""14,99997771"",""59,2168766"",""13,03760207"",""-13,08%"",""-1,96237564"",,""16,74%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,03.03.2025,BTI,""37,72"",""0,530222"",BRITISH AMERICAN TOBACCO PLC ADS Common Stock,Consumer Staples,United Kingdom,""19,99997384"",4094,""2170,728868"",""10753,66%"",""2150,728894"",,""100,00%"",""0,3"",""0,4"",""0,3"""
-"purchase,dividend,Stock,01.04.2025,KO,,,Coca-Cola Co,Consumer Staples,United States,""0,42"",,,,,,,""0,3"",""0,4"",""0,3"""
+purchase,open,Stock,24.02.2025,KO,"67,45",1,Coca-Cola Co,Consumer Staples,United States,"67,45","56,55750555","56,55750555","-16,15%","-10,89249445",-1,"75,04%","0,3","0,4","0,3"
+purchase,open,Stock,03.03.2025,AIR.PA,"170,32","0,088069",Airbus SE,Industrials,France,"14,99991208","193,86","17,07305634","13,82%","2,07314426",,"100,00%","0,4","0,4","0,2"
+purchase,closed,Stock,03.03.2025,RHM.DE,1124,"0,013345",Rheinmetall AG,Industrials,Germany,"14,99978",,,,,,,"0,4","0,4","0,2"
+purchase,open,Stock,03.03.2025,LMT,"431,95","0,034726",Lockheed Martin Corp,Industrials,United States,"14,9998957","402,6540219","13,98256356","-6,78%","-1,017332136",,"49,78%","0,4","0,4","0,2"
+purchase,open,Stock,03.03.2025,KO,"68,13","0,220167",Coca-Cola Co,Consumer Staples,United States,"14,99997771","56,55750555","12,45209632","-16,99%","-2,547881386",,"16,52%","0,3","0,4","0,3"
+purchase,open,Stock,03.03.2025,BTI,"37,72","0,530222",BRITISH AMERICAN TOBACCO PLC ADS Common Stock,Consumer Staples,United Kingdom,"19,99997384",4031,"2137,324882","10586,64%","2117,324908",,"100,00%","0,3","0,4","0,3"
+purchase,dividend,Stock,01.04.2025,KO,,,Coca-Cola Co,Consumer Staples,United States,"0,42",,,,,,,"0,3","0,4","0,3"
 ,,,,,,,,,,,,,,,,,,,
-"purchase,closed,Stock,02.04.2025,RHM.DE,1310,""0,000763"",Rheinmetall AG,Industrials,Germany,""0,99953"",,,,,,,""0,4"",""0,4"",""0,2"""
-"purchase,closed,Stock,02.04.2025,RHM.DE,1313,""0,00498"",Rheinmetall AG,Industrials,Germany,""6,53874"",,,,,,,""0,4"",""0,4"",""0,2"""
-"purchase,open,Stock,02.04.2025,VIB3.F,18,""0,11"",Villeroy & Boch AG,Consumer Discretionary,Germany,""1,98"",""17,1"",""1,881"",""-5,00%"",""-0,099"",,""21,53%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.04.2025,WMT,""82,7"",""0,036275"",Walmart Inc,Consumer Staples,United States,""2,9999425"",""83,2418132"",""3,019596774"",""0,66%"",""0,01965427383"",,""23,68%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.04.2025,COST,""887,4"",""0,00338"",Costco Wholesale Corp,Consumer Staples,United States,""2,999412"",""809,6892888"",""2,736749796"",""-8,76%"",""-0,2626622039"",,""22,86%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.04.2025,NVDA,""100,26"",""0,019948"",NVIDIA Corp,Information Technology,United States,""1,99998648"",""149,4455774"",""2,981140378"",""49,06%"",""0,981153898"",,""19,33%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.04.2025,BRK-B,""493,9"",""0,008098"",Berkshire Hathaway Inc Class B,Financials,United States,""3,9996022"",""431,7278532"",""3,496132155"",""-12,59%"",""-0,5034700448"",,""15,05%"",""0,0"",""0,7"",""0,3"""
-"purchase,open,Stock,02.04.2025,MSFT,""351,65"",""0,005687"",Microsoft Corp,Information Technology,United States,""1,99983355"",""434,9122946"",""2,473346219"",""23,68%"",""0,4735126694"",,""24,95%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.04.2025,MCD,""289,05"",""0,010378"",McDonald's Corp,Consumer Discretionary,United States,""2,9997609"",""269,1239236"",""2,792968079"",""-6,89%"",""-0,2067928209"",,""21,58%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.04.2025,KO,""66,39"",""0,030125"",Coca-Cola Co,Consumer Staples,United States,""1,99999875"",""59,2168766"",""1,783908408"",""-10,80%"",""-0,2160903424"",,""2,29%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.04.2025,HDB,61,""0,032786"",HDFC Bank Ltd,Financials,India,""1,999946"",60,""1,96716"",""-1,64%"",""-0,032786"",,""17,67%"",""0,0"",""0,7"",""0,3"""
+purchase,closed,Stock,02.04.2025,RHM.DE,1310,"0,000763",Rheinmetall AG,Industrials,Germany,"0,99953",,,,,,,"0,4","0,4","0,2"
+purchase,closed,Stock,02.04.2025,RHM.DE,1313,"0,00498",Rheinmetall AG,Industrials,Germany,"6,53874",,,,,,,"0,4","0,4","0,2"
 ,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-"purchase,dividend,Stock,24.04.2025,AIR.PA,,,Airbus SE,Industrials,France,""0,19"",,,,,,,""0,4"",""0,4"",""0,2"""
-"selling,closed,Stock,30.04.2025,RHM.DE,1479,""0,019088"",Rheinmetall AG,Industrials,Germany,""28,231152"",,,,,""5,693102"",,""0,4"",""0,4"",""0,2"""
-,,,,,,,,,,,,,,,,,,,
-"purchase,open,Stock,02.05.2025,VIB3.F,""17,8"",""0,112359"",Villeroy & Boch AG,Consumer Discretionary,Germany,""1,9999902"",""17,1"",""1,9213389"",""-3,93%"",""-0,0786513"",,""21,99%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.05.2025,WMT,""87,06"",""0,034458"",Walmart Inc,Consumer Staples,United States,""2,99991348"",""83,2418132"",""2,868346399"",""-4,39%"",""-0,1315670808"",,""22,50%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.05.2025,COST,""895,1"",""0,003351"",Costco Wholesale Corp,Consumer Staples,United States,""2,9994801"",""809,6892888"",""2,713268807"",""-9,54%"",""-0,2862112932"",,""22,66%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.05.2025,NVDA,""100,18"",""0,029946"",NVIDIA Corp,Information Technology,United States,""2,99999028"",""149,4455774"",""4,475297261"",""49,18%"",""1,475306981"",,""29,02%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.05.2025,SBUX,""73,42"",""0,02724"",Starbucks Corp,Consumer Discretionary,United States,""1,9999608"",""75,6970046"",""2,061986405"",""3,10%"",""0,0620256053"",,""29,45%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.05.2025,BRK-B,""474,2"",""0,006326"",Berkshire Hathaway Inc Class B,Financials,United States,""2,9997892"",""431,7278532"",""2,731110399"",""-8,96%"",""-0,2686788007"",,""11,76%"",""0,0"",""0,7"",""0,3"""
-"purchase,open,Stock,02.05.2025,KO,""62,9"",""0,015898"",Coca-Cola Co,Consumer Staples,United States,""0,9999842"",""59,2168766"",""0,9414299042"",""-5,86%"",""-0,05855429581"",,""1,21%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.05.2025,MSFT,""383,7"",""0,005212"",Microsoft Corp,Information Technology,United States,""1,9998444"",""434,9122946"",""2,266762879"",""13,35%"",""0,2669184795"",,""22,86%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.05.2025,MCD,""274,55"",""0,010926"",McDonald's Corp,Consumer Discretionary,United States,""2,9997333"",""269,1239236"",""2,940447989"",""-1,98%"",""-0,05928531075"",,""22,72%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.05.2025,HDB,65,""0,046153"",HDFC Bank Ltd,Financials,India,""2,999945"",60,""2,76918"",""-7,69%"",""-0,230765"",,""24,87%"",""0,0"",""0,7"",""0,3"""
-"purchase,open,Stock,02.05.2025,AAPL,""174,84"",""0,114351"",Apple Inc,Information Technology,United States,""19,99312884"",""199,2550476"",""22,78501395"",""13,96%"",""2,791885108"",-1,""80,13%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.05.2025,NESN.SW,""94,89"",""0,126462"",Nestle SA,Consumer Staples,Switzerland,""11,99997918"",""79,82102772"",""10,09432681"",""-15,88%"",""-1,905652372"",-1,""33,27%"",""0,3"",""0,4"",""0,3"""
+purchase,open,Stock,02.04.2025,WMT,"82,7","0,036275",Walmart Inc,Consumer Staples,United States,"2,9999425","87,12222705","3,160358786","5,35%","0,1604162862",,"21,96%","0,3","0,4","0,3"
+purchase,open,Stock,02.04.2025,COST,"887,4","0,00338",Costco Wholesale Corp,Consumer Staples,United States,"2,999412","809,8033566","2,737135345","-8,74%","-0,2622766547",,"21,09%","0,3","0,4","0,3"
+purchase,open,Stock,02.04.2025,NVDA,"100,26","0,019948",NVIDIA Corp,Information Technology,United States,"1,99998648","150,354591","2,999273381","49,96%","0,9992869013",,"17,06%","0,2","0,3","0,5"
+purchase,open,Stock,02.04.2025,BRK-B,"493,9","0,008098",Berkshire Hathaway Inc Class B,Financials,United States,"3,9996022","419,6050973","3,397962078","-15,04%","-0,6016401225",,"12,84%","0,0","0,7","0,3"
+purchase,open,Stock,02.04.2025,MSFT,"351,65","0,005687",Microsoft Corp,Information Technology,United States,"1,99983355","440,9578331","2,507727197","25,40%","0,5078936466",,"22,65%","0,2","0,3","0,5"
+purchase,open,Stock,02.04.2025,MCD,"289,05","0,010378",McDonald's Corp,Consumer Discretionary,United States,"2,9997609","257,4417963","2,671730962","-10,94%","-0,328029938",,"18,69%","0,2","0,4","0,4"
+purchase,open,Stock,02.04.2025,KO,"66,39","0,030125",Coca-Cola Co,Consumer Staples,United States,"1,99999875","56,55750555","1,703794855","-14,81%","-0,2962038953",,"2,26%","0,3","0,4","0,3"
+purchase,open,Stock,02.04.2025,HDB,61,"0,032786",HDFC Bank Ltd,Financials,India,"1,999946","29,8","0,9770228","-51,15%","-1,0229232",,"16,21%","0,0","0,7","0,3"
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
@@ -47,24 +25,21 @@ type,status,type,date,ticker,purchase_price,amount,title,industry,country,sum,cu
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
-"purchase,dividend,Stock,07.05.2025,BTI,,,BRITISH AMERICAN TOBACCO PLC ADS Common Stock,Consumer Staples,United Kingdom,""0,29"",,,,,,,""0,3"",""0,4"",""0,3"""
-"purchase,dividend,Stock,14.05.2025,VIB3.F,,,Villeroy & Boch AG,Consumer Discretionary,Germany,""0,15"",,,,,,,""0,2"",""0,4"",""0,4"""
-"purchase,dividend,Stock,16.05.2025,COST,,,Costco Wholesale Corp,Consumer Staples,United States,0,,,,,,,""0,3"",""0,4"",""0,3"""
-"purchase,dividend,Stock,27.05.2025,WMT,,,Walmart Inc,Consumer Staples,United States,""0,01"",,,,,,,""0,3"",""0,4"",""0,3"""
-"purchase,dividend,Stock,30.05.2025,SBUX,,,Starbucks Corp,Consumer Discretionary,United States,""0,01"",,,,,,,""0,2"",""0,4"",""0,4"""
+purchase,dividend,Stock,24.04.2025,AIR.PA,,,Airbus SE,Industrials,France,"0,19",,,,,,,"0,4","0,4","0,2"
+selling,closed,Stock,30.04.2025,RHM.DE,1479,"0,019088",Rheinmetall AG,Industrials,Germany,"28,231152",,,,,"5,693102",,"0,4","0,4","0,2"
 ,,,,,,,,,,,,,,,,,,,
-"purchase,open,Stock,02.06.2025,AAPL,""174,66"",""0,01145"",Apple Inc,Information Technology,United States,""1,999857"",""199,2550476"",""2,281470295"",""14,08%"",""0,281613295"",,""8,02%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.06.2025,NESN.SW,""93,35"",""0,021424"",Nestle SA,Consumer Staples,Switzerland,""1,9999304"",""79,82102772"",""1,710085698"",""-14,49%"",""-0,2898447021"",,""5,64%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.06.2025,VIB3.F,""16,55"",""0,120845"",Villeroy & Boch AG,Consumer Discretionary,Germany,""1,99998475"",""17,1"",""2,0664495"",""3,32%"",""0,06646475"",,""23,66%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.06.2025,WMT,""86,24"",""0,034786"",Walmart Inc,Consumer Staples,United States,""2,99994464"",""83,2418132"",""2,895649714"",""-3,48%"",""-0,104294926"",,""22,71%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.06.2025,COST,""918,5"",""0,003266"",Costco Wholesale Corp,Consumer Staples,United States,""2,999821"",""809,6892888"",""2,644445217"",""-11,85%"",""-0,3553757828"",,""22,09%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.06.2025,NVDA,""119,12"",""0,025184"",NVIDIA Corp,Information Technology,United States,""2,99991808"",""149,4455774"",""3,763637421"",""25,46%"",""0,7637193412"",,""24,40%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.06.2025,SBUX,""73,45"",""0,027229"",Starbucks Corp,Consumer Discretionary,United States,""1,99997005"",""75,6970046"",""2,061153738"",""3,06%"",""0,06118368825"",,""29,44%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.06.2025,KO,""62,64"",""0,015964"",Coca-Cola Co,Consumer Staples,United States,""0,99998496"",""59,2168766"",""0,945338218"",""-5,46%"",""-0,05464674196"",,""1,21%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.06.2025,BRK-B,""438,55"",""0,00684"",Berkshire Hathaway Inc Class B,Financials,United States,""2,999682"",""431,7278532"",""2,953018516"",""-1,56%"",""-0,04666348411"",,""12,71%"",""0,0"",""0,7"",""0,3"""
-"purchase,open,Stock,02.06.2025,MSFT,""403,65"",""0,004954"",Microsoft Corp,Information Technology,United States,""1,9996821"",""434,9122946"",""2,154555507"",""7,74%"",""0,1548734074"",,""21,73%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.06.2025,MCD,""272,9"",""0,010993"",McDonald's Corp,Consumer Discretionary,United States,""2,9999897"",""269,1239236"",""2,958479292"",""-1,38%"",""-0,04151040787"",,""22,86%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.06.2025,HDB,66,""0,045454"",HDFC Bank Ltd,Financials,India,""2,999964"",60,""2,72724"",""-9,09%"",""-0,272724"",,""24,49%"",""0,0"",""0,7"",""0,3"""
+,,,,,,,,,,,,,,,,,,,
+purchase,open,Stock,02.05.2025,WMT,"87,06","0,034458",Walmart Inc,Consumer Staples,United States,"2,99991348","87,12222705","3,0020577","0,07%","0,002144219689",,"20,86%","0,3","0,4","0,3"
+purchase,open,Stock,02.05.2025,COST,"895,1","0,003351",Costco Wholesale Corp,Consumer Staples,United States,"2,9994801","809,8033566","2,713651048","-9,53%","-0,285829052",,"20,91%","0,3","0,4","0,3"
+purchase,open,Stock,02.05.2025,NVDA,"100,18","0,029946",NVIDIA Corp,Information Technology,United States,"2,99999028","150,354591","4,502518582","50,08%","1,502528302",,"25,61%","0,2","0,3","0,5"
+purchase,open,Stock,02.05.2025,SBUX,"73,42","0,02724",Starbucks Corp,Consumer Discretionary,United States,"1,9999608","71,9931156","1,961092469","-1,94%","-0,03886833106",,"20,57%","0,2","0,4","0,4"
+purchase,open,Stock,02.05.2025,BRK-B,"474,2","0,006326",Berkshire Hathaway Inc Class B,Financials,United States,"2,9997892","419,6050973","2,654421845","-11,51%","-0,3453673548",,"10,03%","0,0","0,7","0,3"
+purchase,open,Stock,02.05.2025,KO,"62,9","0,015898",Coca-Cola Co,Consumer Staples,United States,"0,9999842","56,55750555","0,8991512232","-10,08%","-0,1008329768",,"1,19%","0,3","0,4","0,3"
+purchase,open,Stock,02.05.2025,MSFT,"383,7","0,005212",Microsoft Corp,Information Technology,United States,"1,9998444","440,9578331","2,298272226","14,92%","0,2984278259",,"20,76%","0,2","0,3","0,5"
+purchase,open,Stock,02.05.2025,MCD,"274,55","0,010926",McDonald's Corp,Consumer Discretionary,United States,"2,9997333","257,4417963","2,812809066","-6,23%","-0,1869242336",,"19,68%","0,2","0,4","0,4"
+purchase,open,Stock,02.05.2025,HDB,65,"0,046153",HDFC Bank Ltd,Financials,India,"2,999945","29,8","1,3753594","-54,15%","-1,6245856",,"22,82%","0,0","0,7","0,3"
+purchase,open,Stock,02.05.2025,AAPL,"174,84","0,114351",Apple Inc,Information Technology,United States,"19,99312884","209,0150175","23,90107627","19,55%","3,907947426",-1,"77,40%","0,2","0,3","0,5"
+purchase,open,Stock,02.05.2025,NESN.SW,"94,89","0,126462",Nestle SA,Consumer Staples,Switzerland,"11,99997918","77,49439698","9,800096431","-18,33%","-2,199882749",-1,"29,40%","0,3","0,4","0,3"
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
@@ -72,47 +47,24 @@ type,status,type,date,ticker,purchase_price,amount,title,industry,country,sum,cu
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
-"purchase,dividend,Stock,12.06.2025,MSFT,,,Microsoft Corp,Information Technology,United States,""0,01"",,,,,,,""0,2"",""0,3"",""0,5"""
-"purchase,dividend,Stock,16.06.2025,MCD,,,McDonald's Corp,Consumer Discretionary,United States,""0,02"",,,,,,,""0,2"",""0,4"",""0,4"""
+purchase,dividend,Stock,07.05.2025,BTI,,,BRITISH AMERICAN TOBACCO PLC ADS Common Stock,Consumer Staples,United Kingdom,"0,29",,,,,,,"0,3","0,4","0,3"
 ,,,,,,,,,,,,,,,,,,,
-"purchase,dividend,Stock,27.06.2025,LMT,,,Lockheed Martin Corp,Industrials,United States,""0,06"",,,,,,,""0,4"",""0,4"",""0,2"""
-"purchase,dividend,Stock,01.07.2025,KO,,,Coca-Cola Co,Consumer Staples,United States,""0,41"",,,,,,,""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.07.2025,AAPL,178,""0,011235"",Apple Inc,Information Technology,United States,""1,99983"",""199,2550476"",""2,23863046"",""11,94%"",""0,2388004598"",,""7,87%"",""0,2"",""0,3"",""0,5"""
+purchase,dividend,Stock,16.05.2025,COST,,,Costco Wholesale Corp,Consumer Staples,United States,0,,,,,,,"0,3","0,4","0,3"
+purchase,dividend,Stock,27.05.2025,WMT,,,Walmart Inc,Consumer Staples,United States,"0,01",,,,,,,"0,3","0,4","0,3"
+purchase,dividend,Stock,30.05.2025,SBUX,,,Starbucks Corp,Consumer Discretionary,United States,"0,01",,,,,,,"0,2","0,4","0,4"
 ,,,,,,,,,,,,,,,,,,,
-"purchase,open,Stock,02.07.2025,NESN.SW,""84,92"",""0,035327"",Nestle SA,Consumer Staples,Switzerland,""2,99996884"",""79,82102772"",""2,819837446"",""-6,00%"",""-0,1801313937"",,""9,29%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.07.2025,VIB3.F,""18,1"",""0,110497"",Villeroy & Boch AG,Consumer Discretionary,Germany,""1,9999957"",""17,1"",""1,8894987"",""-5,52%"",""-0,110497"",,""21,63%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.07.2025,WMT,""83,27"",""0,036027"",Walmart Inc,Consumer Staples,United States,""2,99996829"",""83,2418132"",""2,998952804"",""-0,03%"",""-0,001015485844"",,""23,52%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.07.2025,COST,""837,3"",""0,003582"",Costco Wholesale Corp,Consumer Staples,United States,""2,9992086"",""809,6892888"",""2,900307032"",""-3,30%"",""-0,09890156752"",,""24,23%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.07.2025,NVDA,""132,2"",""0,015128"",NVIDIA Corp,Information Technology,United States,""1,9999216"",""149,4455774"",""2,260812695"",""13,05%"",""0,2608910949"",,""14,66%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.07.2025,SBUX,""80,22"",""0,024931"",Starbucks Corp,Consumer Discretionary,United States,""1,99996482"",""75,6970046"",""1,887202022"",""-5,64%"",""-0,1127627983"",,""26,96%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.07.2025,BRK-B,""410,7"",""0,007304"",Berkshire Hathaway Inc Class B,Financials,United States,""2,9997528"",""431,7278532"",""3,15334024"",""5,12%"",""0,1535874398"",,""13,57%"",""0,0"",""0,7"",""0,3"""
-"purchase,open,Stock,02.07.2025,KO,""60,55"",""0,016515"",Coca-Cola Co,Consumer Staples,United States,""0,99998325"",""59,2168766"",""0,977966717"",""-2,20%"",""-0,02201653295"",,""1,26%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,02.07.2025,MSFT,""418,2"",""0,004782"",Microsoft Corp,Information Technology,United States,""1,9998324"",""434,9122946"",""2,079750593"",""4,00%"",""0,07991819278"",,""20,98%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,02.07.2025,MCD,""249,7"",""0,012014"",McDonald's Corp,Consumer Discretionary,United States,""2,9998958"",""269,1239236"",""3,233254818"",""7,78%"",""0,2333590181"",,""24,98%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,02.07.2025,HDB,65,""0,046153"",HDFC Bank Ltd,Financials,India,""2,999945"",60,""2,76918"",""-7,69%"",""-0,230765"",,""24,87%"",""0,0"",""0,7"",""0,3"""
+purchase,open,Stock,02.06.2025,AAPL,"174,66","0,01145",Apple Inc,Information Technology,United States,"1,999857","209,0150175","2,39322195","19,67%","0,3933649504",,"7,75%","0,2","0,3","0,5"
+purchase,open,Stock,02.06.2025,NESN.SW,"93,35","0,021424",Nestle SA,Consumer Staples,Switzerland,"1,9999304","77,49439698","1,660239961","-16,99%","-0,3396904391",,"4,98%","0,3","0,4","0,3"
 ,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,
-"purchase,dividend,Stock,03.07.2025,NVDA,,,NVIDIA Corp,Information Technology,United States,0,,,,,,,""0,2"",""0,3"",""0,5"""
-"purchase,dividend,Stock,01.08.2025,BTI,,,BRITISH AMERICAN TOBACCO PLC ADS Common Stock,Consumer Staples,United Kingdom,""0,28"",,,,,,,""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,04.08.2025,AAPL,""176,3"",""0,005672"",Apple Inc,Information Technology,United States,""0,9999736"",""199,2550476"",""1,13017463"",""13,02%"",""0,13020103"",,""3,97%"",""0,2"",""0,3"",""0,5"""
-,,,,,,,,,,,,,,,,,,,
-"purchase,open,Stock,04.08.2025,NESN.SW,""76,18"",""0,196902"",Nestle SA,Consumer Staples,Switzerland,""14,99999436"",""79,82102772"",""15,71692"",""4,78%"",""0,7169256401"",,""51,80%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,04.08.2025,VIB3.F,""17,5"",""0,057142"",Villeroy & Boch AG,Consumer Discretionary,Germany,""0,999985"",""17,1"",""0,9771282"",""-2,29%"",""-0,0228568"",,""11,19%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,04.08.2025,WMT,""86,12"",""0,011611"",Walmart Inc,Consumer Staples,United States,""0,99993932"",""83,2418132"",""0,9665206931"",""-3,34%"",""-0,03341862693"",,""7,58%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,04.08.2025,COST,""827,9"",""0,001207"",Costco Wholesale Corp,Consumer Staples,United States,""0,9992753"",""809,6892888"",""0,9772949716"",""-2,20%"",""-0,02198032842"",,""8,16%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,04.08.2025,NVDA,""153,84"",""0,013"",NVIDIA Corp,Information Technology,United States,""1,99992"",""149,4455774"",""1,942792506"",""-2,86%"",""-0,0571274938"",,""12,60%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,04.08.2025,SBUX,""76,4"",""0,013089"",Starbucks Corp,Consumer Discretionary,United States,""0,9999996"",""75,6970046"",""0,9907980932"",""-0,92%"",""-0,009201506791"",,""14,15%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,04.08.2025,LMT,""364,65"",""0,024681"",Lockheed Martin Corp,Industrials,United States,""8,99992665"",""391,0854542"",""9,652380095"",""7,25%"",""0,6524534451"",,""41,55%"",""0,4"",""0,4"",""0,2"""
-"purchase,open,Stock,04.08.2025,BRK-B,""396,1"",""0,025246"",Berkshire Hathaway Inc Class B,Financials,United States,""9,9999406"",""431,7278532"",""10,89940138"",""8,99%"",""0,8994607819"",,""46,91%"",""0,0"",""0,7"",""0,3"""
-"purchase,open,Stock,04.08.2025,KO,""59,15"",""0,016906"",Coca-Cola Co,Consumer Staples,United States,""0,9999899"",""59,2168766"",""1,001120516"",""0,11%"",""0,0011306158"",,""1,29%"",""0,3"",""0,4"",""0,3"""
-"purchase,open,Stock,04.08.2025,MSFT,""462,75"",""0,00216"",Microsoft Corp,Information Technology,United States,""0,99954"",""434,9122946"",""0,9394105563"",""-6,02%"",""-0,06012944366"",,""9,48%"",""0,2"",""0,3"",""0,5"""
-"purchase,open,Stock,04.08.2025,MCD,""264,05"",""0,003787"",McDonald's Corp,Consumer Discretionary,United States,""0,99995735"",""269,1239236"",""1,019172299"",""1,92%"",""0,01921494867"",,""7,87%"",""0,2"",""0,4"",""0,4"""
-"purchase,open,Stock,04.08.2025,HDB,""66,5"",""0,015037"",HDFC Bank Ltd,Financials,India,""0,9999605"",60,""0,90222"",""-9,77%"",""-0,0977405"",,""8,10%"",""0,0"",""0,7"",""0,3"""
+purchase,open,Stock,02.06.2025,WMT,"86,24","0,034786",Walmart Inc,Consumer Staples,United States,"2,99994464","87,12222705","3,03063379","1,02%","0,03068915016",,"21,06%","0,3","0,4","0,3"
+purchase,open,Stock,02.06.2025,COST,"918,5","0,003266",Costco Wholesale Corp,Consumer Staples,United States,"2,999821","809,8033566","2,644817763","-11,83%","-0,3550032373",,"20,38%","0,3","0,4","0,3"
+purchase,open,Stock,02.06.2025,NVDA,"119,12","0,025184",NVIDIA Corp,Information Technology,United States,"2,99991808","150,354591","3,78653002","26,22%","0,7866119397",,"21,54%","0,2","0,3","0,5"
+purchase,open,Stock,02.06.2025,SBUX,"73,45","0,027229",Starbucks Corp,Consumer Discretionary,United States,"1,99997005","71,9931156","1,960300545","-1,98%","-0,03966950533",,"20,57%","0,2","0,4","0,4"
+purchase,open,Stock,02.06.2025,KO,"62,64","0,015964",Coca-Cola Co,Consumer Staples,United States,"0,99998496","56,55750555","0,9028840186","-9,71%","-0,0971009414",,"1,20%","0,3","0,4","0,3"
+purchase,open,Stock,02.06.2025,BRK-B,"438,55","0,00684",Berkshire Hathaway Inc Class B,Financials,United States,"2,999682","419,6050973","2,870098865","-4,32%","-0,1295831348",,"10,84%","0,0","0,7","0,3"
+purchase,open,Stock,02.06.2025,MSFT,"403,65","0,004954",Microsoft Corp,Information Technology,United States,"1,9996821","440,9578331","2,184505105","9,24%","0,1848230049",,"19,73%","0,2","0,3","0,5"
+purchase,open,Stock,02.06.2025,MCD,"272,9","0,010993",McDonald's Corp,Consumer Discretionary,United States,"2,9999897","257,4417963","2,830057667","-5,66%","-0,1699320333",,"19,80%","0,2","0,4","0,4"
+purchase,open,Stock,02.06.2025,HDB,66,"0,045454",HDFC Bank Ltd,Financials,India,"2,999964","29,8","1,3545292","-54,85%","-1,6454348",,"22,47%","0,0","0,7","0,3"
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
@@ -120,8 +72,79 @@ type,status,type,date,ticker,purchase_price,amount,title,industry,country,sum,cu
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
-"purchase,dividend,Stock,14.08.2025,AAPL,,,Apple Inc,Information Technology,United States,""0,02"",,,,,,,""0,2"",""0,3"",""0,5"""
-"purchase,dividend,Stock,15.08.2025,COST,,,Costco Wholesale Corp,Consumer Staples,United States,""0,01"",,,,,,,""0,3"",""0,4"",""0,3"""
-"purchase,dividend,Stock,21.08.2025,HDB,,,HDFC Bank Ltd,Financials,India,""0,08"",,,,,,,""0,0"",""0,7"",""0,3"""
-"purchase,dividend,Stock,29.08.2025,SBUX,,,Starbucks Corp,Consumer Discretionary,United States,""0,03"",,,,,,,""0,2"",""0,4"",""0,4"""
+purchase,dividend,Stock,12.06.2025,MSFT,,,Microsoft Corp,Information Technology,United States,"0,01",,,,,,,"0,2","0,3","0,5"
+purchase,dividend,Stock,16.06.2025,MCD,,,McDonald's Corp,Consumer Discretionary,United States,"0,02",,,,,,,"0,2","0,4","0,4"
 ,,,,,,,,,,,,,,,,,,,
+purchase,dividend,Stock,27.06.2025,LMT,,,Lockheed Martin Corp,Industrials,United States,"0,06",,,,,,,"0,4","0,4","0,2"
+purchase,dividend,Stock,01.07.2025,KO,,,Coca-Cola Co,Consumer Staples,United States,"0,41",,,,,,,"0,3","0,4","0,3"
+purchase,open,Stock,02.07.2025,AAPL,178,"0,011235",Apple Inc,Information Technology,United States,"1,99983","209,0150175","2,348283722","17,42%","0,3484537216",,"7,60%","0,2","0,3","0,5"
+,,,,,,,,,,,,,,,,,,,
+purchase,open,Stock,02.07.2025,NESN.SW,"84,92","0,035327",Nestle SA,Consumer Staples,Switzerland,"2,99996884","77,49439698","2,737644562","-8,74%","-0,2623242779",,"8,21%","0,3","0,4","0,3"
+,,,,,,,,,,,,,,,,,,,
+purchase,open,Stock,02.07.2025,WMT,"83,27","0,036027",Walmart Inc,Consumer Staples,United States,"2,99996829","87,12222705","3,138752474","4,63%","0,1387841839",,"21,81%","0,3","0,4","0,3"
+purchase,open,Stock,02.07.2025,COST,"837,3","0,003582",Costco Wholesale Corp,Consumer Staples,United States,"2,9992086","809,8033566","2,900715623","-3,28%","-0,09849297666",,"22,36%","0,3","0,4","0,3"
+purchase,open,Stock,02.07.2025,NVDA,"132,2","0,015128",NVIDIA Corp,Information Technology,United States,"1,9999216","150,354591","2,274564253","13,73%","0,2746426526",,"12,94%","0,2","0,3","0,5"
+purchase,open,Stock,02.07.2025,SBUX,"80,22","0,024931",Starbucks Corp,Consumer Discretionary,United States,"1,99996482","71,9931156","1,794860365","-10,26%","-0,205104455",,"18,83%","0,2","0,4","0,4"
+purchase,open,Stock,02.07.2025,BRK-B,"410,7","0,007304",Berkshire Hathaway Inc Class B,Financials,United States,"2,9997528","419,6050973","3,06479563","2,17%","0,06504283031",,"11,58%","0,0","0,7","0,3"
+purchase,open,Stock,02.07.2025,KO,"60,55","0,016515",Coca-Cola Co,Consumer Staples,United States,"0,99998325","56,55750555","0,9340472042","-6,59%","-0,06593604584",,"1,24%","0,3","0,4","0,3"
+purchase,open,Stock,02.07.2025,MSFT,"418,2","0,004782",Microsoft Corp,Information Technology,United States,"1,9998324","440,9578331","2,108660358","5,44%","0,1088279576",,"19,04%","0,2","0,3","0,5"
+purchase,open,Stock,02.07.2025,MCD,"249,7","0,012014",McDonald's Corp,Consumer Discretionary,United States,"2,9998958","257,4417963","3,092905741","3,10%","0,09300994075",,"21,63%","0,2","0,4","0,4"
+purchase,open,Stock,02.07.2025,HDB,65,"0,046153",HDFC Bank Ltd,Financials,India,"2,999945","29,8","1,3753594","-54,15%","-1,6245856",,"22,82%","0,0","0,7","0,3"
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+purchase,dividend,Stock,03.07.2025,NVDA,,,NVIDIA Corp,Information Technology,United States,0,,,,,,,"0,2","0,3","0,5"
+purchase,dividend,Stock,01.08.2025,BTI,,,BRITISH AMERICAN TOBACCO PLC ADS Common Stock,Consumer Staples,United Kingdom,"0,28",,,,,,,"0,3","0,4","0,3"
+purchase,open,Stock,04.08.2025,AAPL,"176,3","0,005672",Apple Inc,Information Technology,United States,"0,9999736","209,0150175","1,185533179","18,56%","0,1855595793",,"3,84%","0,2","0,3","0,5"
+,,,,,,,,,,,,,,,,,,,
+purchase,open,Stock,04.08.2025,NESN.SW,"76,18","0,196902",Nestle SA,Consumer Staples,Switzerland,"14,99999436","77,49439698","15,25880175","1,73%","0,2588073942",,"45,77%","0,3","0,4","0,3"
+,,,,,,,,,,,,,,,,,,,
+purchase,open,Stock,04.08.2025,WMT,"86,12","0,011611",Walmart Inc,Consumer Staples,United States,"0,99993932","87,12222705","1,011576178","1,16%","0,01163685828",,"7,03%","0,3","0,4","0,3"
+purchase,open,Stock,04.08.2025,COST,"827,9","0,001207",Costco Wholesale Corp,Consumer Staples,United States,"0,9992753","809,8033566","0,9774326514","-2,19%","-0,02184264858",,"7,53%","0,3","0,4","0,3"
+purchase,open,Stock,04.08.2025,NVDA,"153,84","0,013",NVIDIA Corp,Information Technology,United States,"1,99992","150,354591","1,954609683","-2,27%","-0,045310317",,"11,12%","0,2","0,3","0,5"
+purchase,open,Stock,04.08.2025,SBUX,"76,4","0,013089",Starbucks Corp,Consumer Discretionary,United States,"0,9999996","71,9931156","0,9423178901","-5,77%","-0,05768170991",,"9,89%","0,2","0,4","0,4"
+purchase,open,Stock,04.08.2025,LMT,"364,65","0,024681",Lockheed Martin Corp,Industrials,United States,"8,99992665","402,6540219","9,937903915","10,42%","0,9379772645",,"35,38%","0,4","0,4","0,2"
+purchase,open,Stock,04.08.2025,BRK-B,"396,1","0,025246",Berkshire Hathaway Inc Class B,Financials,United States,"9,9999406","419,6050973","10,59335029","5,93%","0,5934096852",,"40,02%","0,0","0,7","0,3"
+purchase,open,Stock,04.08.2025,KO,"59,15","0,016906",Coca-Cola Co,Consumer Staples,United States,"0,9999899","56,55750555","0,9561611888","-4,38%","-0,04382871117",,"1,27%","0,3","0,4","0,3"
+purchase,open,Stock,04.08.2025,MSFT,"462,75","0,00216",Microsoft Corp,Information Technology,United States,"0,99954","440,9578331","0,9524689194","-4,71%","-0,04707108061",,"8,60%","0,2","0,3","0,5"
+purchase,open,Stock,04.08.2025,MCD,"264,05","0,003787",McDonald's Corp,Consumer Discretionary,United States,"0,99995735","257,4417963","0,9749320826","-2,50%","-0,02502526741",,"6,82%","0,2","0,4","0,4"
+purchase,open,Stock,04.08.2025,HDB,"66,5","0,015037",HDFC Bank Ltd,Financials,India,"0,9999605","29,8","0,4481026","-55,19%","-0,5518579",,"7,43%","0,0","0,7","0,3"
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+purchase,dividend,Stock,14.08.2025,AAPL,,,Apple Inc,Information Technology,United States,"0,02",,,,,,,"0,2","0,3","0,5"
+purchase,dividend,Stock,15.08.2025,COST,,,Costco Wholesale Corp,Consumer Staples,United States,"0,01",,,,,,,"0,3","0,4","0,3"
+purchase,dividend,Stock,21.08.2025,HDB,,,HDFC Bank Ltd,Financials,India,"0,08",,,,,,,"0,0","0,7","0,3"
+purchase,dividend,Stock,29.08.2025,SBUX,,,Starbucks Corp,Consumer Discretionary,United States,"0,03",,,,,,,"0,2","0,4","0,4"
+Покупка,Dividend,Stock,02.09.2025,WMT,,,Walmart Inc,Consumer Staples,United States,"0,02",,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+Покупка,Открыта,ETF,02.09.2025,,"28,96","0,172681",Prime Japan JPY (Acc),Diversified,Japan,"5,00084176","28,84","4,98012004","-0,41%","-0,02072172",,"11,82%",,,
+,,,,,,,,,,,,,,,,,,,
+Покупка,Открыта,ETF,02.09.2025,,"23,65","0,007417",MSCI Poland USD (Acc),Diversified,Poland,"0,17541205","24,33","0,18045561","2,88%","0,00504356",,"1,43%",,,
+Покупка,Saveback,ETF,02.09.2025,,"23,65","0,358139",MSCI Poland USD (Acc),Diversified,Poland,"8,46998735","24,33","8,71352187","2,88%","0,24353452",,"69,01%",,,
+Покупка,Открыта,ETF,02.09.2025,,"269,65","0,007417",EURO STOXX Banks EUR (Acc),Financials,Diversified,"1,99999405","268,6","1,9922062","-0,39%","-0,00778785",,"16,19%",,,
+Покупка,Открыта,ETF,02.09.2025,,"222,8","0,022441",DAX EUR (Acc),Diversified,Germany,"4,9998548","221,75","4,97629175","-0,47%","-0,02356305",,"12,96%",,,
+Покупка,Открыта,Stock,02.09.2025,NESN.SW,"79,85","0,050093",Nestle SA,Consumer Staples,Switzerland,"3,99992605","77,49439698","3,881926828","-2,95%","-0,1179992221",,"11,64%",,,
+,,,,,,,,,,,,,,,,,,,
+Покупка,Открыта,ETF,02.09.2025,,"222,05","0,009006",STOXX Europe 600 Optimised Insurance EUR (Acc),Financials,Diversified,"1,9997823","218,6","1,9687116","-1,55%","-0,0310707",,"17,97%",,,
+Покупка,Открыта,Stock,02.09.2025,WMT,"83,07","0,012038",Walmart Inc,Consumer Staples,United States,"0,99999666","87,12222705","1,048777369","4,88%","0,04878070923",,"7,29%",,,
+Покупка,Открыта,Stock,02.09.2025,COST,"808,3","0,001237",Costco Wholesale Corp,Consumer Staples,United States,"0,9998671","809,8033566","1,001726752","0,19%","0,001859652114",,"7,72%",,,
+Покупка,Открыта,Stock,02.09.2025,,"9,36","0,213583",S&P 500 Health Care USD (Acc),Hralthcare,United States,"1,99913688","9,38","2,00340854","0,21%","0,00427166",,"15,64%",,,
+Покупка,Открыта,Stock,02.09.2025,NVDA,"145,92","0,013706",NVIDIA Corp,Information Technology,United States,"1,99997952","150,354591","2,060760024","3,04%","0,06078050425",,"11,72%",,,
+Покупка,Открыта,Stock,02.09.2025,SBUX,"75,17","0,039909",Starbucks Corp,Consumer Discretionary,United States,"2,99995953","71,9931156","2,87317325","-4,23%","-0,1267862795",,"30,14%",,,
+Покупка,Открыта,Stock,02.09.2025,LMT,"386,4","0,010351",Lockheed Martin Corp,Industrials,United States,"3,9996264","402,6540219","4,167871781","4,21%","0,1682453807",,"14,84%",,,
+Покупка,Открыта,Stock,02.09.2025,BRK-B,"431,25","0,009275",Berkshire Hathaway Inc Class B,Financials,United States,"3,99984375","419,6050973","3,891837277","-2,70%","-0,108006473",,"14,70%",,,
+Покупка,Открыта,Stock,02.09.2025,KO,"58,62","0,017059",Coca-Cola Co,Consumer Staples,United States,"0,99999858","56,55750555","0,9648144872","-3,52%","-0,03518409282",,"1,28%",,,
+Покупка,Открыта,Stock,02.09.2025,MSFT,"431,6","0,002316",Microsoft Corp,Information Technology,United States,"0,9995856","440,9578331","1,021258341","2,17%","0,02167274134",,"9,22%",,,
+Покупка,Открыта,Stock,02.09.2025,MCD,269,"0,007434",McDonald's Corp,Consumer Discretionary,United States,"1,999746","257,4417963","1,913822314","-4,30%","-0,08592368631",,"13,39%",,,
+Покупка,Открыта,Stock,02.09.2025,HDB,60,"0,016666",HDFC Bank Ltd,Financials,India,"0,99996","29,8","0,4966468","-50,33%","-0,5033132",,"8,24%",,,
+Покупка,Dividend,Stock,02.09.2025,MSFT,,,Microsoft Corp,Information Technology,United States,"0,01",,,,,,,,,
+Покупка,Dividend,Stock,16.09.2025,MCD,,,McDonald's Corp,Consumer Discretionary,United States,"0,06",,,,,,,,,

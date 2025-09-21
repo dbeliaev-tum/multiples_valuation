@@ -70,8 +70,23 @@ companies_to_value = {
 
 # --- Data Preparation ---
 try:
-    # Read the CSV file containing deal information
-    df = pd.read_csv('sample_deals_yahoo.csv')
+    # Read the CSV file with proper handling of quotes and European number format
+    df = pd.read_csv('sample_deals_yahoo.csv',
+                     sep=',',
+                     decimal=',',
+                     thousands='.',
+                     quotechar='"',
+                     encoding='utf-8')
+
+    # Remove completely empty rows
+    df = df.dropna(how='all')
+
+    # # Display the first few rows to check the structure
+    # print("DataFrame structure:")
+    # print(df.head())
+    # print("\nColumns in DataFrame:")
+    # print(df.columns.tolist())
+
 except FileNotFoundError:
     print("✗ Error: The file 'sample_deals_yahoo.csv' was not found.")
     exit()
@@ -86,28 +101,43 @@ if not all(col in df.columns for col in required_columns):
 # Select only the necessary columns and drop rows with missing values
 combined_df = df[required_columns].dropna()
 
+# Check if we have any data after filtering
+if combined_df.empty:
+    print("✗ Error: No data found after filtering for required columns.")
+    print("Available data in required columns:")
+    for col in required_columns:
+        print(f"{col}: {df[col].notna().sum()} non-null values")
+    exit()
+
 # Convert numerical columns to float, handling potential comma-based decimals
 try:
     for col in ['price_ev_w', 'price_pe_w', 'price_ps_w']:
+        # First convert to string, then replace comma with dot, then to float
         combined_df.loc[:, col] = combined_df[col].astype(str).str.replace(',', '.').astype(float)
 except ValueError as e:
     print(f"✗ Error converting data to numeric format: {e}")
-    print("Please ensure that the 'price_ev_w', 'price_pe_w', and 'price_ps_w' columns contain only numerical values.")
+    print("Sample values in problematic column:")
+    print(combined_df[col].head())
     exit()
 
-# Convert the DataFrame to a dictionary mapping tickers to their weights.
-# The weights are used to determine the importance of each valuation method.
-weights = {deal[0]: deal[1:] for deal in combined_df.drop_duplicates().values.tolist()}
+# Convert the DataFrame to a dictionary mapping tickers to their weights
+weights = {}
+for _, row in combined_df.iterrows():
+    ticker = row['ticker']
+    weights[ticker] = (row['price_ev_w'], row['price_pe_w'], row['price_ps_w'])
 
 # A new dictionary to store only the companies that have corresponding data in the CSV file
 companies_to_evaluate = {}
-for deal in combined_df.drop_duplicates().values.tolist():
-    ticker = deal[0]
+for ticker in combined_df['ticker'].unique():
     if ticker in companies_to_value:
         companies_to_evaluate[ticker] = companies_to_value[ticker]
     else:
         print(f"Ticker {ticker} is not in the peer valuation database.")
         continue
+
+# Debug information
+# print(f"Companies to evaluate: {list(companies_to_evaluate.keys())}")
+# print(f"Weights: {weights}")
 
 # --- Core Functions ---
 
