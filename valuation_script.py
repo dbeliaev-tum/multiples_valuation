@@ -218,7 +218,7 @@ def get_company_data(ticker: str, verbose: bool = True) -> dict:
         eps = info.get('trailingEps')
 
         # Convert to float and apply the EUR exchange rate
-        price_f = safe_float(price)
+        price_f = safe_float(price) * euro_rate
         shares_f = safe_float(shares)
 
         debt_f = safe_float(debt) * euro_rate if safe_float(debt) is not None else None
