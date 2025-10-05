@@ -1,12 +1,15 @@
-# Market Multiples Valuation Script
-#
-# This script performs a relative valuation of companies by comparing them to a set of peers
-# using key market multiples like EV/EBITDA, P/E, and P/S. It fetches financial data from Yahoo Finance,
-# calculates average peer multiples, and then applies these to the target company to
-# estimate its fair value.
-# To install the required libraries, run:
-# pip install yfinance pandas
-#
+"""
+Market Multiples Valuation Script
+
+This script performs relative valuation of companies by comparing them to peer groups
+using key market multiples (EV/EBITDA, P/E, P/S). It fetches financial data from
+Yahoo Finance, calculates average peer multiples, and applies these to target
+companies to estimate fair value.
+
+Author: DenisBeliaev
+Date: September 2025
+License: MIT
+"""
 from typing import Dict, List, Optional, Tuple
 from functools import lru_cache
 import warnings
