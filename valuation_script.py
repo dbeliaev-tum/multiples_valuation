@@ -10,12 +10,14 @@ Author: DenisBeliaev
 Date: September 2025
 License: MIT
 """
+
 from typing import Dict, List, Optional, Tuple
 from functools import lru_cache
 import warnings
-import math
 import yfinance as yf
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 # Suppress warnings from yfinance, which can sometimes be noisy
 warnings.filterwarnings("ignore", category=FutureWarning)
