@@ -22,127 +22,312 @@ import threading
 # Suppress warnings from yfinance, which can sometimes be noisy
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# --- Configuration ---
-# A dictionary mapping each target company to its list of comparable peers.
-# The keys are the tickers of the companies to be valued, and the values are
-# lists of tickers for their peers. The comments specify the industry for clarity.
+# --- Companies to Value and Their Peer Groups ---
+# Keys: Target company tickers, Values: Lists of peer company tickers
+# Used for comparative analysis and multiplier calculations
 companies_to_value = {
-    # Non-alcoholic Beverages (The Coca-Cola Company)
     "KO": ["PEP", "KDP", "MNST"],
-
-    # Aerospace & Defense (Airbus SE)
-    "AIR.PA": ["RTX", "LMT", "NOC", "SAF.PA", "BA"],
-
-    # Defense (Rheinmetall AG)
-    "RHM.DE": ["NOC", "RTX", "GD", "LHX", "SAF.PA", "LMT"],
-
-    # Defense (Lockheed Martin)
-    "LMT": ["NOC", "RTX", "GD", "LHX", "SAF.PA"],
-
-    # Tobacco (British American Tobacco)
+    "AIR.PA": ["RTX", "LMT", "SAF.PA","NOC", "BA"],
+    "RHM.DE": ["NOC", "RTX", "LHX", "SAF.PA", "LMT"],
+    "LMT": ["NOC", "RTX", "GD", "LHX"],
     "BTI": ["PM", "MO"],
-
-    # Discount Stores / Retail (Walmart)
-    "WMT": ["TGT", "COST", "BJ", "KR"],
-
-    # Discount Stores / Retail (Costco)
-    "COST": ["WMT", "TGT", "BJ", "KR"],
-
-    # Semiconductors (Nvidia)
-    "NVDA": ["AVGO", "AMD", "TSM", "INTC", "QCOM", "ASML.AS", "MU"],
-
-    # Conglomerate (Berkshire Hathaway)
-    "BRK-B": ["BLK", "MKL", "L", "BN", "JEF"],
-
-    # Software (Microsoft)
-    "MSFT": ["ORCL", "SAP.DE", "CRM", "ADBE", "NOW"],
-
-    # Fast Food Restaurants (McDonald's)
+    "SID.F": ["IBN", "BBD", "ITUB", "HDB"],
+    "VIB3.F": ["FSKRS.HE", "GEBN.SW", "FSKRS.HE", "MAS","MHK", "5938.T"],
+    "WMT": ["TGT", "COST", "BJ"],
+    "COST": ["WMT", "TGT", "BJ", "LOW"],
+    "NVDA": ["AVGO", "AMD", "ARM", "INTC", "QCOM", "ASML.AS", "MU"],
+    "BRK-B": ["BLK","MKL", "L", "BN", "JEF"],
+    "MSFT": ["ORCL", "SAP.DE", "ADBE", "NOW"],
     "MCD": ["SBUX", "YUM", "CMG", "QSR", "DPZ"],
+    "HDB": ["IBN", "BBD", "ITUB", "SID.F"],
+    "SBUX": ["MCD", "JDEP.AS","CMG", "QSR"],
+    "AAPL": ["MSFT", "GOOGL"],
+    "NESN.SW": ["UL", "RBGLY", "DANOY", "MDLZ"],
 
-    # Financial Services / Banks (HDFC Bank)
-    "HDB": ["IBN", "BBD", "ITUB", "SHG", "SID.F", "KB"],
+    "PKO.WA": ["SAN.MC", "DBK.DE", "CBK.DE"],
+    "PKN.WA": ["REP.MC", "ENI.MI", "TTE.PA"],
+    "PZU.WA": ["ALV.DE", "CS.PA", "MUV2.DE"],
+    "PEO.WA": ["SAN.MC", "DBK.DE", "CBK.DE"],
+    "ALE.WA": ["ETSY", "EBAY"],
+    "DNP.WA": ["TSCDY", "DLTR", "ZAB.WA", "WMT", "COST", "TSCO.L"],
+    "SPL.WA": ["SAN.MC", "DBK.DE", "CBK.DE"],
+    "KGH.WA": ["FCX", "BHP","TECK", "RIO"],
+    "LPP.WA": ["ZAL.DE", "ADS.DE"],
+    "CDR.WA": ["UBI.PA", "TTWO","EA"],
+    "MBK.WA": ["SAN.MC", "DBK.DE", "CBK.DE"],
+    "PGE.WA": ["ENA.WA","TPE.WA", "ENGI.PA"],
+    "MIL.WA": ["SAN.MC", "DBK.DE", "CBK.DE"],
+    "CCC.WA": ["ZAL.DE", "NKE", "ADS.DE", "SKX"],
+    "BDX.WA": ["ACS.MC", "HO.PA", "VIE.PA"],
+    "ZAB.WA": ["WMT", "COST", "TSCO.L", "DNP.WA"],
 
-    # Restaurants / Coffee Shops (Starbucks)
-    "SBUX": ["MCD", "CMG", "QSR"],
+    "SAP.DE": ["ORCL", "MSFT", "CRM", "NOW", "WDAY"],
+    "SIE.DE": ["HON", "MMM", "ABBN.SW", "RTX"],
+    "ALV.DE": ["ZURN.SW", "CS.PA", "AIG", "MET", "MUV2.DE", "SREN.SW", "AV.L", "LGEN.L"],
+    "DTE.DE": ["T", "VZ", "FTE.F"],
+    "AIR.DE": ["RTX", "LMT", "NOC", "SAF.PA", "BA"],
+    "MUV2.DE": ["HNR1.DE", "RNR", "TRV", "BRK-B", "SREN.SW"],
+    "RWE.DE": ["ENEL.MI", "KEX", "EOAN.DE"],
+    "DBK.DE": ["CBK.DE", "INGA.AS", "BNP.PA", "UCG.MI", "ISP.MI", "UBSG.SW", "UBS"],
+    "DB1.DE": ["ICE", "LNSTY", "NDAQ"],
+    "IFX.DE": ["QCOM", "NXPI", "ON", "STM"],
+    "BAS.DE": ["LYB", "DOW", "COVTY", "AKZA.AS"],
+    "DHL.DE": ["UPS", "FDX", "CHRW"],
+    "MBG.DE": ["BMW.DE", "VOW3.DE", "GM", "STLA", "F"],
+    "EOAN.DE": ["RWE.DE", "ENEL.MI", "NG.L"],
+    "CBK.DE": ["DBK.DE", "BAC", "HSBC", "BNP.PA", "UBS", "INGA.AS", "UCG.MI", "ISP.MI", "EBS.VI"],
+    "ADS.DE": ["NKE", "PUM.DE", "LULU", "SKX"],
+    "BAYN.DE": ["NVO","FMC","CTVA", "PFE", "SNY"],
+    "HEI.DE": ["CRH", "HOLN.SW"],
+    "BMW.DE": ["MBG.DE", "VOW3.DE", "GM", "F", "STLA"],
+    "DTG.DE": ["VOLCAR-B.ST", "PCAR", "8TRA.DE"],
+    "MTX.DE": ["RTX", "SAF.PA","LHX"],
+    "VNA.DE": ["EQR", "AVB"],
+    "VOW3.DE": ["MBG.DE", "BMW.DE", "GM", "STLA", "F", "000270.KS"],
+    "HNR1.DE": ["MUV2.DE", "RNR", "TRV", "BRK-B"],
+    "SHL.DE": ["PHG", "HOLX"],
+    "MRK.DE": ["BAYN.DE", "NVO", "ROG.SW", "SNY"],
+    "HEN3.DE": ["UL", "KMB", "RKT.L", "BEI.DE"],
+    "BEI.DE": ["EL", "PG", "UL", "CL", "LRLCY", "COTY"],
+    "SY1.DE": ["IFF", "KRYAY"],
+    "QIA.DE": ["TMO", "BIO", "ILMN"],
+    "FME.DE": ["DVA","BAX"],
+    "CON.DE": ["MGA", "LEA", "GT", "ADNT"],
+    "BNR.DE": ["IMCD.AS","AZE.BR","LYB", "DOW", "BAS.DE"],
+    "ZAL.DE": ["YOU.DE", "CCC.WA"],
+    "PAH3.DE": ["MBG.DE", "BMW.DE", "AML.L"],
+    "P911.DE": ["MBG.DE", "BMW.DE", "AML.L"],
+    "SRT3.DE": ["TMO", "BIO", "ILMN"],
+    "LHA.DE": ["AAL", "DAL", "UAL", "AF.PA", "IAG.L"],
+    "ENR.DE": ["GE", "VWS.CO", "CAT"],
+    "FRE.DE": ["HCA", "THC", "BAX"],
 
-    # Technology / Consumer Electronics (Apple)
-    "AAPL": ["MSFT", "GOOGL", "SONY", "SMSN.IL", "HPQ", "DELL", "LNVGY"],
+    "7203.T": ["7267.T", "7201.T", "7211.T", "F", "GM"],
+    "7267.T": ["7203.T", "7269.T", "7201.T", "F", "GM"],
+    "7269.T": ["7203.T", "7267.T", "7201.T", "F", "GM"],
+    "8306.T": ["8316.T", "8411.T", "BAC", "WFC", "C"],
+    "8316.T": ["8306.T", "8411.T", "JPM", "BAC", "WFC"],
+    "8411.T": ["8306.T", "8316.T", "BAC", "WFC"],
+    "8766.T": ["8725.T", "8630.T", "MET", "PRU", "PGR"],
+    "8725.T": ["8630.T", "MET", "PRU"],
+    "8630.T": ["8766.T", "8725.T", "MET", "PRU"],
+    "8750.T": ["8725.T", "MET", "PRU"],
+    "6758.T": ["7751.T", "6954.T", "SONY", "6753.T", "PHG"],
+    "7751.T": ["6758.T", "6753.T", "HPQ", "XRX"],
+    "6954.T": ["6758.T", "7751.T", "6753.T", "EMR", "ROK"],
+    "8035.T": ["6723.T", "LRCX", "AMAT"],
+    "6857.T": ["8035.T", "LRCX", "AMAT"],
+    "6723.T": ["8035.T", "INTC"],
+    "6861.T": ["8035.T", "6857.T", "6723.T", "KEY", "TYL"],
+    "9432.T": ["9433.T", "9434.T", "T", "VZ", "DTEGY"],
+    "9433.T": ["9432.T", "9434.T", "9436.T", "T", "VZ", "DTEGY"],
+    "9434.T": ["9432.T", "9433.T", "9436.T", "T", "VZ"],
+    "6702.T": ["6701.T", "6758.T", "IBM", "ACN", "CTS"],
+    "6701.T": ["6702.T", "6758.T", "IBM", "ACN"],
+    "4502.T": ["4568.T", "4503.T", "4519.T", "PFE", "MRK", "NVS"],
+    "4568.T": ["4502.T", "4503.T", "4519.T", "PFE", "MRK"],
+    "4503.T": ["4502.T", "4568.T", "PFE", "MRK"],
+    "4519.T": ["4502.T", "4568.T", "4503.T", "PFE", "MRK"],
+    "9983.T": ["3382.T", "HD", "LOW"],
+    "8267.T": ["9983.T", "3382.T", "HD", "LOW", "WMT", "TGT"],
+    "3382.T": ["8267.T", "LOW", "WMT", "TGT"],
+    "4063.T": ["4901.T", "3407.T", "4452.T", "DOW", "BASFY"],
+    "4901.T": ["3407.T", "4452.T", "DOW"],
+    "4452.T": ["4063.T", "4901.T", "PG", "UL", "CL"],
+    "6501.T": ["7011.T", "6301.T", "6503.T", "GE", "SIEGY"],
+    "7011.T": ["6501.T", "6301.T", "6503.T", "SIEGY"],
+    "6301.T": ["6501.T", "7011.T", "6503.T"],
+    "6503.T": ["6501.T", "7011.T", "6301.T", "SIEGY"],
+    "8801.T": ["8802.T", "1925.T", "8830.T"],
+    "8802.T": ["8801.T", "8830.T", "BXP"],
+    "1925.T": ["8801.T", "LEN", "DHI", "PHM"],
+    "8001.T": ["8031.T", "8002.T", "8053.T", "8058.T"],
+    "8031.T": ["8001.T", "8002.T", "8053.T", "8058.T", "MITSF"],
+    "8002.T": ["8001.T", "8031.T", "8053.T", "8058.T"],
+    "8053.T": ["8001.T", "8031.T", "8002.T", "8058.T", "SMFG"],
+    "8058.T": ["8001.T", "8031.T", "8002.T", "8053.T"],
+    "7974.T": ["7832.T", "9697.T", "EA", "TTWO"],
+    "7832.T": ["7974.T", "9697.T", "EA", "TTWO", "HEIA.AS"],
+    "9984.T": ["9434.T", "3690.T", "BABA", "TCEHY", "JD"],
+    "6098.T": ["2121.T", "RHI", "ADP"],
+    "4661.T": ["DIS", "HLT"],
+    "5401.T": ["5411.T", "NUE", "STLD", "CLF"],
+    "2914.T": ["MO", "BTI", "IMBBY"],
+    "7741.T": ["4543.T", "4901.T", "TMO", "DHR", "BDX", "JNJ"],
+    "4543.T": ["7741.T", "4901.T", "TMO", "DHR", "BDX"],
+    "6367.T": ["6501.T", "6503.T"],
+    "8591.T": ["8411.T", "8316.T", "APO"],
+    "6981.T": ["6752.T", "6762.T", "6861.T", "SWKS", "QRVO"],
+    "6762.T": ["6981.T", "6752.T", "6861.T", "SWKS", "QRVO"],
+    "6146.T": ["6501.T", "7011.T", "6954.T", "PTC"],
+    "5108.T": ["5101.T", "BRDCY", "GOOD", "GT"],
+    "9022.T": ["9020.T", "9001.T", "9005.T", "9007.T", "CSX"],
+    "9020.T": ["9022.T", "9001.T", "9005.T", "9007.T", "UNP", "CSX"],
+    "6902.T": ["7203.T", "7269.T", "ALV", "MGA", "APTV"],
+    "2802.T": ["K", "GIS", "HSY"],
+    "4578.T": ["4502.T", "4503.T", "PFE"],
+    "6752.T": ["6503.T", "7751.T"],
+    "8308.T": ["8316.T", "8306.T", "8411.T", "RF", "KEY", "CFG", "FITB"],
+    "8604.T": ["8411.T", "MS", "GS", "BARC.L"],
+    "5803.T": ["6501.T", "6503.T", "NVT"],
+    "5802.T": ["6501.T","6503.T"],
 
-    # Consumer Goods / Food (Nestle)
-    "NESN.SW": ["UL", "RBGLY", "DANOY", "MDLZ"]
+    "SAN.MC": ["BBVA.MC", "BNP.PA", "UCG.MI", "ISP.MI", "INGA.AS", "DBK.DE", "HSBA.L"],
+    "BNP.PA": ["SAN.MC", "GLE.PA", "DBK.DE", "HSBA.L"],
+    "UCG.MI": ["BNP.PA", "SAN.MC", "DBK.DE"],
+    "INGA.AS": ["SAN.MC", "BNP.PA", "UCG.MI", "ISP.MI", "DBK.DE", "ABN.AS"],
+    "BBVA.MC": ["SAN.MC", "CABK.MC", "SAB.MC", "BKT.MC", "INGA.AS", "BNP.PA", "UCG.MI"],
+    "CABK.MC": ["SAN.MC", "BBVA.MC", "SAB.MC", "BKT.MC", "ISP.MI", "UCG.MI"],
+    "SAB.MC": ["BBVA.MC", "CABK.MC", "BKT.MC", "BPE.MI"],
+    "BKT.MC": ["SAN.MC", "BBVA.MC", "CABK.MC", "SAB.MC", "EBS.VI", "BG.VI"],
+    "ISP.MI": ["UCG.MI", "BAMI.MI", "BPE.MI", "SAN.MC", "INGA.AS"],
+    "BAMI.MI": ["ISP.MI", "UCG.MI", "BPE.MI", "BPSO.MI"],
+    "BMPS.MI": ["ISP.MI", "UCG.MI", "BAMI.MI", "BPE.MI", "BPSO.MI", "SAB.MC"],
+    "BPE.MI": ["ISP.MI", "UCG.MI", "BAMI.MI", "BMPS.MI", "BPSO.MI", "SAB.MC"],
+    "BPSO.MI": ["ISP.MI", "UCG.MI", "BAMI.MI", "BMPS.MI", "BPE.MI", "BGN.MI"],
+    "KBC.BR": ["INGA.AS", "ABN.AS", "EBS.VI", "BNP.PA", "SAN.MC"],
+    "ABN.AS": ["INGA.AS", "KBC.BR", "EBS.VI", "RBI.VI", "DBK.DE", "CBK.DE"],
+    "EBS.VI": ["RBI.VI", "INGA.AS", "KBC.BR", "ABN.AS", "CBK.DE"],
+    "RBI.VI": ["EBS.VI", "INGA.AS", "KBC.BR", "ABN.AS"],
+    "BG.VI": ["EBS.VI", "INGA.AS", "KBC.BR", "ABN.AS"],
+    "A5G.IR": ["BIRG.IR", "SAN.MC", "INGA.AS", "BNP.PA", "DBK.DE", "HSBA.L"],
+    "BIRG.IR": ["SAN.MC", "INGA.AS", "BNP.PA", "DBK.DE"],
+    "GLE.PA": ["BNP.PA", "ACA.PA", "DBK.DE", "UBSG.SW"],
+    "ACA.PA": ["GLE.PA", "BNP.PA"],
+    "FBK.MI": ["BGN.MI", "UBSG.SW"],
+    "KBCA.BR": ["INGA.AS", "BGN.MI", "FBK.MI"],
+    "BGN.MI": ["FBK.MI", "ACA.PA", "GLE.PA", "BMPS.MI", "UBSG.SW"],
+
+    "CS.PA": ["ALV.DE", "MUV2.DE", "ZURN.SW", "SREN.SW", "PRU", "AV.L", "LGEN.L"],
+    "ZURN.SW": ["ALV.DE", "CS.PA", "MUV2.DE", "SREN.SW", "SLHN.SW"],
+    "SREN.SW": ["MUV2.DE", "HNR1.DE", "RGA", "GLRE"],
+    "PRU": ["MET", "SLF.TO", "PGR"],
+
+    "LLY": ["JNJ", "ABBV", "AMGN", "GILD", "EW", "BSX"],
+    "JNJ": ["ABBV", "MRK", "PFE", "AMGN", "ABT"],
+    "ABBV": ["JNJ", "LLY", "AMGN", "GILD", "EW", "BSX"],
+    "MRK": ["PFE", "BMY", "AMGN"],
+    "PFE": ["MRK", "BMY", "AMGN"],
+    "BMY": ["MRK", "PFE", "AMGN"],
+    "AMGN": ["GILD", "VRTX", "REGN", "VRTX"],
+    "GILD": ["AMGN", "VRTX", "REGN", "BIIB"],
+    "VRTX": ["REGN", "AMGN", "GILD"],
+    "REGN": ["AMGN", "GILD", "BIIB", "INCY"],
+    "TMO": ["BDX", "MDT", "ZBH"],
+    "DHR": ["TMO", "SYK", "MDT"],
+    "BDX": ["TMO", "MDT", "ZBH"],
+    "BSX": ["SYK", "EW", "ABT", "JNJ"],
+    "SYK": ["ABT", "JNJ"],
+    "MDT": ["SYK", "ZBH", "ABT", "JNJ"],
+    "EW": ["BSX", "MDT", "SYK", "ABT", "JNJ"],
+    "ISRG": ["BSX", "SYK", "EW", "ABT"],
+    "IDXX": ["DHR", "WAT"],
+    "RMD": ["MDT", "ABT", "JNJ"],
+    "UNH": ["CI", "ELV", "HUM", "CVS"],
+    "CI": ["UNH", "ELV", "HUM", "CVS", "CNC"],
+    "ELV": ["UNH", "CI", "HUM", "CVS", "CNC"],
+    "CVS": ["CI", "UNH", "WBA", "MCK", "CAH"],
+    "MCK": ["CAH", "COR", "HSIC"],
+    "COR": ["MCK", "CAH", "HSIC"],
+    "HCA": ["UHS", "THC", "ACHC"],
+    "ZTS": ["HALO", "NVS"],
+    "ABT": ["JNJ", "MDT", "BDX", "TMO"]
+}
+
+# Dictionary mapping ETF names to CSV file paths
+etf_dict = {
+    "DAX": "Investments - DAX.csv",
+    "POLAND": "Investments - POLAND.csv"
+}
+
+# Dictionary mapping stock portfolio names to CSV file paths
+stocks_dict = {
+    "Sample": "sample_deals_yahoo.csv"
+    # "Test": "test_deals.csv"
 }
 
 # --- Data Preparation ---
-try:
-    # Read the CSV file with proper handling of quotes and European number format
-    df = pd.read_csv('sample_deals_yahoo.csv',
-                     sep=',',
-                     decimal=',',
-                     thousands='.',
-                     quotechar='"',
-                     encoding='utf-8')
 
-    # Remove completely empty rows
-    df = df.dropna(how='all')
+def prepare_csv_data(file_path: str,
+                     companies_to_value: Optional[Dict[str, List[str]]] = None) -> Tuple[Dict[str, Tuple[float, float, float]], Dict[str, List[str]]]:
+    """
+        Prepares CSV file data for valuation processing.
 
-    # # Display the first few rows to check the structure
-    # print("DataFrame structure:")
-    # print(df.head())
-    # print("\nColumns in DataFrame:")
-    # print(df.columns.tolist())
+        Complex Business Logic:
+        - Handles European number formatting (comma as decimal separator)
+        - Validates required columns and data completeness
+        - Filters companies based on valuation dictionary
+        - Converts numeric columns with robust error handling
 
-except FileNotFoundError:
-    print("✗ Error: The file 'sample_deals_yahoo.csv' was not found.")
-    exit()
+        Args:
+            file_path: Path to the CSV file
+            companies_to_value: Optional dictionary of companies to filter for evaluation
 
-# Define the required columns and check for their existence
-required_columns = ['ticker', 'price_ev_w', 'price_pe_w', 'price_ps_w']
-if not all(col in df.columns for col in required_columns):
+        Returns:
+            Tuple containing:
+            - weights: Dictionary mapping tickers to valuation method weights
+            - companies_to_evaluate: Filtered dictionary of companies for evaluation
+
+        Raises:
+            FileNotFoundError: When specified file doesn't exist
+            ValueError: When required columns are missing or data conversion fails
+        """
+
+    # Required columns for processing
+    required_columns = ['ticker', 'price_ev_w', 'price_pe_w', 'price_ps_w']
+
+    try:
+        # Read CSV with European number format handling
+        df = pd.read_csv(
+            file_path,
+            sep=',',
+            decimal=',',
+            thousands='.',
+            quotechar='"',
+            encoding='utf-8'
+        ).dropna(how='all')  # Remove completely empty rows
+
+    except FileNotFoundError:
+        raise FileNotFoundError(f"✗ File '{file_path}' not found.")
+
+    # Check for required columns
     missing_cols = [col for col in required_columns if col not in df.columns]
-    print(f"✗ Error: The following required columns are missing from the file: {', '.join(missing_cols)}")
-    exit()
+    if missing_cols:
+        raise ValueError(f"✗ Missing required columns: {', '.join(missing_cols)}")
 
-# Select only the necessary columns and drop rows with missing values
-combined_df = df[required_columns].dropna()
+    # Select required columns and remove rows with missing values
+    data_df = df[required_columns].dropna()
 
-# Check if we have any data after filtering
-if combined_df.empty:
-    print("✗ Error: No data found after filtering for required columns.")
-    print("Available data in required columns:")
-    for col in required_columns:
-        print(f"{col}: {df[col].notna().sum()} non-null values")
-    exit()
+    if data_df.empty:
+        # Show available data statistics
+        stats = {col: df[col].notna().sum() for col in required_columns}
+        raise ValueError(f"✗ No data available after filtering. Available data: {stats}")
 
-# Convert numerical columns to float, handling potential comma-based decimals
-try:
-    for col in ['price_ev_w', 'price_pe_w', 'price_ps_w']:
-        # First convert to string, then replace comma with dot, then to float
-        combined_df.loc[:, col] = combined_df[col].astype(str).str.replace(',', '.').astype(float)
-except ValueError as e:
-    print(f"✗ Error converting data to numeric format: {e}")
-    print("Sample values in problematic column:")
-    print(combined_df[col].head())
-    exit()
+    # Convert numeric columns to float (handle comma as decimal separator)
+    numeric_cols = ['price_ev_w', 'price_pe_w', 'price_ps_w']
+    for col in numeric_cols:
+        try:
+            data_df[col] = data_df[col].astype(str).str.replace(',', '.').astype(float)
+        except ValueError as e:
+            raise ValueError(f"✗ Error converting column '{col}': {e}")
 
-# Convert the DataFrame to a dictionary mapping tickers to their weights
-weights = {}
-for _, row in combined_df.iterrows():
-    ticker = row['ticker']
-    weights[ticker] = (row['price_ev_w'], row['price_pe_w'], row['price_ps_w'])
+    # Create weights dictionary
+    weights: Dict[str, Tuple[float, float, float]] = {
+        row['ticker']: (row['price_ev_w'], row['price_pe_w'], row['price_ps_w'])
+        for _, row in data_df.iterrows()
+    }
 
-# A new dictionary to store only the companies that have corresponding data in the CSV file
-companies_to_evaluate = {}
-for ticker in combined_df['ticker'].unique():
-    if ticker in companies_to_value:
-        companies_to_evaluate[ticker] = companies_to_value[ticker]
-    else:
-        print(f"Ticker {ticker} is not in the peer valuation database.")
-        continue
+    # Filter companies for evaluation
+    companies_to_evaluate = {}
+    if companies_to_value:
+        for ticker in data_df['ticker'].unique():
+            if ticker in companies_to_value:
+                companies_to_evaluate[ticker] = companies_to_value[ticker]
+            else:
+                print(f"⚠ Ticker {ticker} not found in valuation database.")
 
-# Debug information
-# print(f"Companies to evaluate: {list(companies_to_evaluate.keys())}")
-# print(f"Weights: {weights}")
+    print(f"✓ Successfully processed {len(weights)} records from file '{file_path}'")
+    return weights, companies_to_evaluate
 
 # --- Core Functions ---
 
