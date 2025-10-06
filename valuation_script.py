@@ -236,7 +236,6 @@ companies_to_value = {
 
 # Dictionary mapping ETF names to CSV file paths
 etf_dict = {
-    "DAX": "Investments - DAX.csv",
     "POLAND": "Investments - POLAND.csv"
 }
 

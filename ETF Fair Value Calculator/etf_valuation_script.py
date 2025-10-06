@@ -47,3 +47,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Suppress warnings from yfinance, which can sometimes be noisy
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# --- ETF File Configuration ---
+# Dictionary mapping ETF names to CSV file paths
+# Each CSV file should contain ETF composition data: tickers, shares, valuation method weights
+etf_dict = {
+    "POLAND": "Investments - POLAND.csv",
+}
