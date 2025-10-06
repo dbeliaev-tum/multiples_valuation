@@ -375,3 +375,63 @@ def load_and_filter_portfolio_data(combined_df: Optional[pd.DataFrame],
 
     print(f"✓ Tickers added: {added_count}")
     return companies_to_evaluate
+
+# --- Core Functions ---
+
+@lru_cache(maxsize=None)
+def get_exchange_rate(currency_from: str, currency_to: str) -> Optional[float]:
+    """Fetches the exchange rate between two currencies using yfinance."""
+    if currency_from == currency_to:
+        return 1.0
+
+    ticker = f"{currency_from}{currency_to}=X"
+    try:
+        data = yf.Ticker(ticker)
+        rate = data.info.get('regularMarketPrice')
+        if rate:
+            return rate
+    except Exception as e:
+        print(f"✗ Failed to get exchange rate for {ticker}: {e}")
+    return None
+
+def safe_float(value: any) -> Optional[float]:
+    """Safely converts a value to a float, returning None on failure."""
+    try:
+        return float(value) if value is not None else None
+    except (ValueError, TypeError):
+        return None
+
+def get_value(data: pd.DataFrame, keys: List[str]) -> Optional[float]:
+    """
+    Efficiently retrieves a scalar value from a Pandas DataFrame, prioritizing
+    the first available key from the list.
+    """
+    if data is None or data.empty:
+        return None
+
+    # Iterate through potential keys to find a match in the DataFrame index
+    # Iteration is necessary here because multiple keys are provided.
+    for k in keys:
+        if k in data.index:
+            try:
+                # Retrieve the row, drop NaN values, and check if it's not empty
+                series = data.loc[k].dropna()
+                if not series.empty:
+                    # Return the first available value converted to float
+                    return float(series.iloc[0])
+            except (ValueError, TypeError):
+                # Skip to the next key if conversion to float fails
+                continue
+
+    return None
+
+def find_value_by_keys(data: Dict[str, any], keys: List[str]) -> Optional[any]:
+    """
+    Searches for a value in a dictionary by iterating through a list of possible keys.
+    Returns the value corresponding to the first key found.
+    """
+    for key in keys:
+        value = data.get(key)
+        if value is not None:
+            return value
+    return None
