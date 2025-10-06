@@ -1,0 +1,5 @@
+type,status,type,date,ticker,title,industry,price_ev_w,price_pe_w,price_ps_w
+purchase,open,Stock,24.02.2025,SAP.DE,Coca-Cola Co,Information Technology,"0,1833333333","0,35","0,4666666667"
+purchase,open,Stock,03.03.2025,SIE.DE,Airbus SE,Information Technology,"0,1833333333","0,35","0,4666666667"
+purchase,closed,Stock,03.03.2025,ALV.DE,Rheinmetall AG,Financials,"0,01666666667","0,5833333333","0,4"
+purchase,open,Stock,03.03.2025,DTE.DE,Lockheed Martin Corp,Communication Services,"0,25","0,4333333333","0,3166666667"

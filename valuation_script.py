@@ -243,7 +243,7 @@ etf_dict = {
 # Dictionary mapping stock portfolio names to CSV file paths
 stocks_dict = {
     "Sample": "sample_deals_yahoo.csv"
-    # "Test": "test_deals.csv"
+    # "Test": "test_deals_yahoo.csv"
 }
 
 # --- Data Preparation ---
