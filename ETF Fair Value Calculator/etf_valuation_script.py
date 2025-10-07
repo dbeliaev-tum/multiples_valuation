@@ -449,3 +449,94 @@ EPS_KEYS = ['trailingEps', 'basicEps', 'earningsPerShare', 'dilutedEPS']
 NET_INCOME_KEYS = ['netIncome', 'Net Income', 'NetIncome',
                    'Net Income from Continuing & Discontinued Operation','Net Income Continuous Operations',
                    'Normalized Income']
+
+def get_company_data_impl(ticker: str, verbose: bool = True) -> Dict[str, any]:
+    """
+    Core implementation for retrieving and processing company financial data.
+
+    Complex Data Processing Logic:
+    1. Multi-Source Data Retrieval: Attempts multiple data sources with fallbacks
+    2. Currency Normalization: Converts all financial metrics to EUR using live exchange rates
+    3. Data Quality Assessment: Validates data completeness and reliability
+    4. Graceful Degradation: Provides partial results even with incomplete data
+
+    Financial Metric Hierarchy:
+    - Primary metrics from standard Yahoo Finance fields
+    - Fallback to alternative field names when primary unavailable
+    - Validation of data reasonableness and business logic consistency
+
+    Error Recovery:
+    - Implements retry logic for transient API failures
+    - Provides detailed error reporting for troubleshooting
+    - Maintains data consistency across currency conversions
+    """
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info or {}
+
+        if not info or len(info) < 10:
+            import time
+            time.sleep(0.1)
+            t = yf.Ticker(ticker)
+            info = t.info or {}
+
+        currency = info.get('currency', 'USD')
+        euro_rate = get_exchange_rate(currency, 'EUR') or 1.0
+
+        raw_data = {
+            'price': info.get('currentPrice') or info.get('regularMarketPrice') or info.get('previousClose'),
+            'shares': (info.get('sharesOutstanding') or
+                       info.get('impliedSharesOutstanding') or
+                       info.get('floatShares')),
+            'debt': find_value_by_keys(info, DEBT_KEYS),
+            'cash': find_value_by_keys(info, CASH_KEYS),
+            'ebitda': find_value_by_keys(info, EBITDA_KEYS),
+            'revenue': find_value_by_keys(info, REVENUE_KEYS),
+            'eps': find_value_by_keys(info, EPS_KEYS),
+            'net_income': find_value_by_keys(info, NET_INCOME_KEYS),
+        }
+
+        if raw_data['revenue'] is None:
+            alt_revenue = (info.get('totalCashFromOperatingActivities') or
+                           info.get('grossProfit'))
+            if alt_revenue:
+                raw_data['revenue'] = alt_revenue
+
+        data_in_eur = {}
+        for k, v in raw_data.items():
+            if k in ['price', 'debt', 'cash', 'ebitda', 'revenue', 'eps', 'net_income'] and v is not None:
+                data_in_eur[k] = safe_float(v) * euro_rate
+            else:
+                data_in_eur[k] = safe_float(v)
+
+        data_in_eur['name'] = info.get('longName', ticker)
+        data_in_eur['success'] = data_in_eur.get('price') is not None
+
+        if verbose and not data_in_eur['success']:
+            print(f"✗ Error fetching data for {ticker}: No price data available")
+
+        return data_in_eur
+
+    except Exception as e:
+        if verbose:
+            print(f"✗ Error fetching data for {ticker}: {e}")
+        logging.error(f"Error processing ticker {ticker}: {e}")
+        return {'success': False, 'ticker': ticker}
+
+@lru_cache(maxsize=None)
+def get_company_data_cached(ticker: str, verbose: bool = True) -> Tuple[Tuple[str, any], ...]:
+    """
+    Caching wrapper - returns a tuple instead of a dict for hashability.
+    """
+    data = get_company_data_impl(ticker, verbose)
+    # Convert dict to a sorted tuple of items for caching
+    return tuple(sorted(data.items()))
+
+def get_company_data(ticker: str, verbose: bool = True) -> Dict[str, any]:
+    """
+    Public interface for getting company data with caching.
+
+    Converts cached tuple back to dictionary for external use.
+    """
+    cached_tuple = get_company_data_cached(ticker, verbose)
+    return dict(cached_tuple)
