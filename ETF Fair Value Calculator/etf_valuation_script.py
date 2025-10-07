@@ -435,3 +435,17 @@ def find_value_by_keys(data: Dict[str, any], keys: List[str]) -> Optional[any]:
         if value is not None:
             return value
     return None
+
+# --- Financial Metric Keys ---
+# Lists of possible keys in Yahoo Finance data for various financial metrics
+# Used for robust data extraction from the heterogeneous API
+
+# List of potential keys for common financial metrics (can be expanded)
+EBITDA_KEYS = ['ebitda', 'EBITDA', 'ebitdaMargins', 'operatingCashflow']
+REVENUE_KEYS = ['totalRevenue', 'revenue', 'operatingRevenue', 'grossRevenue']
+DEBT_KEYS = ['totalDebt', 'netDebt', 'longTermDebt', 'shortTermDebt', 'totalLiabilities']
+CASH_KEYS = ['cash', 'cashAndCashEquivalents', 'totalCash', 'cashAndShortTermInvestments']
+EPS_KEYS = ['trailingEps', 'basicEps', 'earningsPerShare', 'dilutedEPS']
+NET_INCOME_KEYS = ['netIncome', 'Net Income', 'NetIncome',
+                   'Net Income from Continuing & Discontinued Operation','Net Income Continuous Operations',
+                   'Normalized Income']
