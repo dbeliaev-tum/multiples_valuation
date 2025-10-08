@@ -553,3 +553,153 @@ def get_multiple_companies_data(tickers: List[str]) -> Dict[str, Dict[str, any]]
         import time
         time.sleep(0.1)
     return results
+
+def calculate_peer_multipliers(peers: List[str]) -> Dict[str, any]:
+    """
+    Calculates average valuation multiples for peer companies.
+
+    Complex Business Logic:
+    1. Collects financial data for all peer companies
+    2. Calculates Enterprise Value (EV) = Market Cap + Debt - Cash
+    3. Computes three key valuation multiples:
+       - EV/EBITDA: Enterprise Value to EBITDA (debt-inclusive valuation)
+       - P/E: Price to Earnings per Share (profitability-based valuation)
+       - P/S: Price to Sales per Share (revenue-based valuation)
+    4. Filters outliers and invalid values using reasonable bounds
+    5. Calculates mean values across successful peers
+
+    Outlier Filtering:
+    - EV/EBITDA: excludes values > 50 (atypically high)
+    - P/E: excludes values > 100 (atypically high)
+    - P/S: excludes values > 40 (atypically high)
+
+    Data Quality Assurance:
+    - Only includes companies with successful data retrieval
+    - Handles missing financial metrics gracefully
+    - Provides detailed reporting of failed companies
+
+    Returns:
+        Dictionary with average multipliers and metadata including:
+        - successful_peers: List of companies used in calculation
+        - peers_count: Number of successful peers
+        - individual_multipliers: Detailed results per company
+    """
+    # Load data for all peers using the optimized function
+    all_data_result = get_multiple_companies_data(peers)
+    df = pd.DataFrame.from_dict(all_data_result, orient='index')
+
+    # Filter successful data loads
+    successful = df[df['success']].copy()
+
+    if successful.empty:
+        print("⚠ No successful data loads for any peer companies")
+        return {
+            'ev_ebitda': None,
+            'p_e': None,
+            'p_s': None,
+            'successful_peers': [],
+            'peers_count': 0,
+            'individual_multipliers': {}
+        }
+
+    df = successful
+
+    # Fill missing debt and cash with zeros for EV calculation
+    df['debt'] = df['debt'].fillna(0)
+    df['cash'] = df['cash'].fillna(0)
+
+    # Calculate Enterprise Value (EV)
+    df['ev'] = df['price'] * df['shares'] + df['debt'] - df['cash']
+
+    # Calculate Multipliers
+    # EV/EBITDA
+    df['ev_ebitda'] = None
+    mask_ebitda = (df['ebitda'].notna()) & (df['ebitda'] > 0)
+    if mask_ebitda.sum() > 0:
+        df.loc[mask_ebitda, 'ev_ebitda'] = df.loc[mask_ebitda, 'ev'] / df.loc[mask_ebitda, 'ebitda']
+
+    # P/E
+    df['p_e'] = None
+    mask_eps = (df['eps'].notna()) & (df['eps'] > 0)
+    if mask_eps.sum() > 0:
+        df.loc[mask_eps, 'p_e'] = df.loc[mask_eps, 'price'] / df.loc[mask_eps, 'eps']
+
+    # P/S (corrected formula: Price / (Revenue / Shares))
+    df['sales_per_share'] = df['revenue'] / df['shares']
+    df['p_s'] = None
+    mask_sales = (df['sales_per_share'].notna()) & (df['sales_per_share'] > 0)
+    if mask_sales.sum() > 0:
+        df.loc[mask_sales, 'p_s'] = df.loc[mask_sales, 'price'] / df.loc[mask_sales, 'sales_per_share']
+
+    # Prepare individual multipliers for output
+    individual_multipliers = {}
+    successful_peers = []
+
+    for idx, row in df.iterrows():
+        company_name = row.get('name', idx)
+        multipliers = {}
+
+        if pd.notna(row.get('ev_ebitda')) and 0 < row['ev_ebitda'] < 50:
+            multipliers['ev_ebitda'] = row['ev_ebitda']
+
+        if pd.notna(row.get('p_e')) and 0 < row['p_e'] < 100:
+            multipliers['p_e'] = row['p_e']
+
+        if pd.notna(row.get('p_s')) and 0 < row['p_s'] < 40:
+            multipliers['p_s'] = row['p_s']
+
+        if multipliers:  # Only add if at least one multiplier is calculable
+            individual_multipliers[company_name] = multipliers
+            successful_peers.append(company_name)
+
+            # Print individual company results
+            # print(f"✔ Processed: {company_name} ({idx})")
+            # multipliers_str = []
+            # if 'ev_ebitda' in multipliers:
+            #     multipliers_str.append(f"EV/EBITDA: {multipliers['ev_ebitda']:.2f}")
+            # if 'p_e' in multipliers:
+            #     multipliers_str.append(f"P/E: {multipliers['p_e']:.2f}")
+            # if 'p_s' in multipliers:
+            #     multipliers_str.append(f"P/S: {multipliers['p_s']:.2f}")
+            #
+            # if multipliers_str:
+            #     print(f"   Multipliers: {', '.join(multipliers_str)}")
+
+    # Final calculation (Mean/Median) with flexible limits
+    results = {}
+
+    for multiplier, col, max_val in [
+        ('ev_ebitda', 'ev_ebitda', 50),
+        ('p_e', 'p_e', 100),
+        ('p_s', 'p_s', 40)
+    ]:
+        # Filter for positive, non-null values within reasonable limits
+        all_values = df[(df[col] > 0) & (df[col] < max_val)][col].dropna()
+
+        if all_values.empty:
+            results[multiplier] = None
+            continue
+
+        # Use mean of filtered values
+        results[multiplier] = all_values.mean()
+
+    # Add metadata for compatibility
+    results.update({
+        'successful_peers': successful_peers,
+        'peers_count': len(successful_peers),
+        'individual_multipliers': individual_multipliers
+    })
+
+    # Print summary
+    # print("\n--- AVERAGE MULTIPLES ---")
+    # print(f"Average P/E: {results['p_e']:.2f}" if results['p_e'] else "N/A (No peer data)")
+    # print(f"Average P/S: {results['p_s']:.2f}" if results['p_s'] else "N/A (No peer data)")
+    # print(f"Average EV/EBITDA: {results['ev_ebitda']:.2f}" if results['ev_ebitda'] else "N/A (No peer data)")
+    # print("-------------------------")
+
+    # Report failed companies
+    failed_peers = set(peers) - set(df.index)
+    if failed_peers:
+        print(f"⚠ The following companies could not be used (no data): {', '.join(failed_peers)}")
+
+    return results
