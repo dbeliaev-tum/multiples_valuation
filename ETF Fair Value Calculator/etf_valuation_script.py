@@ -540,3 +540,16 @@ def get_company_data(ticker: str, verbose: bool = True) -> Dict[str, any]:
     """
     cached_tuple = get_company_data_cached(ticker, verbose)
     return dict(cached_tuple)
+
+def get_multiple_companies_data(tickers: List[str]) -> Dict[str, Dict[str, any]]:
+    """
+    Sequential data retrieval for multiple companies with automatic caching.
+
+    Includes strategic delays to respect API rate limits.
+    """
+    results = {}
+    for ticker in tickers:
+        results[ticker] = get_company_data(ticker)
+        import time
+        time.sleep(0.1)
+    return results
