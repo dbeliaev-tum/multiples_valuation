@@ -520,7 +520,6 @@ def get_company_data_impl(ticker: str, verbose: bool = True) -> Dict[str, any]:
     except Exception as e:
         if verbose:
             print(f"✗ Error fetching data for {ticker}: {e}")
-        logging.error(f"Error processing ticker {ticker}: {e}")
         return {'success': False, 'ticker': ticker}
 
 @lru_cache(maxsize=None)
@@ -703,3 +702,172 @@ def calculate_peer_multipliers(peers: List[str]) -> Dict[str, any]:
         print(f"⚠ The following companies could not be used (no data): {', '.join(failed_peers)}")
 
     return results
+
+def valuate_company(ticker: str, multipliers: Dict[str, any],
+                   weights: Dict[str, Tuple[float, float, float]]) -> Dict[str, any]:
+    """
+    Values a company using comparable company analysis methodology.
+
+    Complex Weight Redistribution Logic:
+    1. Checks data availability for each valuation method (EV/EBITDA, P/E, P/S)
+    2. If a method is unavailable (missing data), its weight is redistributed
+       among available methods proportionally to their original weights
+    3. Example: Weights [0.4, 0.3, 0.3] → if P/E unavailable →
+       new weights [0.4/(0.4+0.3), 0, 0.3/(0.4+0.3)] = [0.57, 0, 0.43]
+
+    Valuation Methodologies:
+    - EV/EBITDA: Fair Price = (Enterprise Value - Debt + Cash) / Shares Outstanding
+      where Enterprise Value = Peer EV/EBITDA × Company EBITDA
+    - P/E: Fair Price = Peer P/E × Company EPS
+    - P/S: Fair Price = Peer P/S × (Company Revenue / Shares Outstanding)
+
+    Data Validation:
+    - Ensures positive valuation results before inclusion
+    - Validates financial data quality and availability
+    - Handles edge cases with zero or negative values
+
+    Returns:
+        Comprehensive valuation results dictionary including:
+        - success: Boolean indicating valuation success
+        - fair_price: Calculated fair value per share
+        - premium_discount: Percentage difference from current price
+        - calculations: Individual method valuations
+        - weights_used: Actual weights applied after redistribution
+    """
+    data = get_company_data(ticker)
+
+    # Check for base data failure
+    if not data or not data.get('success'):
+        return {
+            'success': False,
+            'error': 'Failed to fetch target company data',
+            'ticker': ticker
+        }
+
+    # Get weights for this ticker
+    w_ev, w_pe, w_ps = weights.get(ticker, (0.33, 0.33, 0.33))
+
+    # Method availability checks (same logic as ETF)
+    # EV/EBITDA Check
+    ev_m = multipliers.get('ev_ebitda')
+    ev_ebitda = data.get('ebitda')
+    ev_shares = data.get('shares')
+    ev_available = (
+            ev_m is not None and ev_ebitda is not None and ev_shares is not None
+            and ev_ebitda != 0 and ev_shares != 0
+    )
+
+    # P/E Check
+    pe_m = multipliers.get('p_e')
+    pe_eps = data.get('eps')
+    pe_available = (pe_m is not None and pe_eps is not None and pe_eps != 0)
+
+    # P/S Check
+    ps_m = multipliers.get('p_s')
+    ps_revenue = data.get('revenue')
+    ps_shares = data.get('shares')
+    ps_available = (
+            ps_m is not None and ps_revenue is not None and ps_shares is not None
+            and ps_shares != 0 and ps_revenue != 0
+    )
+
+    # Weight redistribution logic
+    available_weights = {}
+    if ev_available: available_weights['ev'] = w_ev
+    if pe_available: available_weights['pe'] = w_pe
+    if ps_available: available_weights['ps'] = w_ps
+
+    if not available_weights:
+        return {
+            'success': False,
+            'error': 'Not enough data to perform valuation',
+            'ticker': ticker
+        }
+
+    total_initial_weight = sum(available_weights.values())
+    if total_initial_weight == 0:
+        return {
+            'success': False,
+            'error': 'All available methods have zero weight',
+            'ticker': ticker
+        }
+
+    # Normalize weights: distribute unavailable weight to available methods
+    normalized_weights = {key: value / total_initial_weight for key, value in available_weights.items()}
+
+    # Valuation calculations
+    valuation_options = []
+    calculations = {}
+
+    # EV/EBITDA (Debt and Cash use default 0 if missing)
+    if 'ev' in normalized_weights:
+        ebitda_val = data['ebitda']
+        ev = multipliers['ev_ebitda'] * ebitda_val
+        price_ev = (ev - data.get('debt', 0) + data.get('cash', 0)) / data['shares']
+        if price_ev > 0:
+            valuation_options.append((price_ev, normalized_weights['ev']))
+            calculations['ev_ebitda'] = price_ev
+
+    # P/E
+    if 'pe' in normalized_weights:
+        price_pe = multipliers['p_e'] * data['eps']
+        if price_pe > 0:
+            valuation_options.append((price_pe, normalized_weights['pe']))
+            calculations['p_e'] = price_pe
+
+    # P/S
+    if 'ps' in normalized_weights:
+        sales_per_share = data['revenue'] / data['shares']
+        price_ps = multipliers['p_s'] * sales_per_share
+        if price_ps > 0:
+            valuation_options.append((price_ps, normalized_weights['ps']))
+            calculations['p_s'] = price_ps
+
+    if not valuation_options:
+        return {
+            'success': False,
+            'error': 'No valid positive valuation results',
+            'ticker': ticker
+        }
+
+    # Calculate Weighted Average
+    final_price = sum(p * w for p, w in valuation_options) / sum(w for p, w in valuation_options)
+    final_price_rounded = round(final_price, 2)
+
+    # Calculate premium/discount
+    current_price = data.get('price')
+    premium_discount = None
+    if current_price and current_price > 0:
+        premium_discount = round((final_price_rounded / current_price - 1) * 100, 1)
+
+    # Print method availability info
+    print(f"\n--- VALUATION METHODS USED FOR {ticker} ---")
+    if 'ev' in normalized_weights:
+        print(f"✓ EV/EBITDA method: weight {normalized_weights['ev']:.2f}")
+    else:
+        print("✗ EV/EBITDA method: insufficient data")
+
+    if 'pe' in normalized_weights:
+        print(f"✓ P/E method: weight {normalized_weights['pe']:.2f}")
+    else:
+        print("✗ P/E method: insufficient data")
+
+    if 'ps' in normalized_weights:
+        print(f"✓ P/S method: weight {normalized_weights['ps']:.2f}")
+    else:
+        print("✗ P/S method: insufficient data")
+    print("----------------------------------------")
+
+    return {
+        'success': True,
+        'ticker': ticker,
+        'company_name': data.get('name', ticker),
+        'current_price': current_price,
+        'fair_price': final_price_rounded,
+        'premium_discount': premium_discount,
+        'calculations': calculations,
+        'peers_used': multipliers.get('successful_peers', []),
+        'peers_count': multipliers.get('peers_count', 0),
+        'individual_multipliers': multipliers.get('individual_multipliers', {}),
+        'weights_used': normalized_weights
+    }
