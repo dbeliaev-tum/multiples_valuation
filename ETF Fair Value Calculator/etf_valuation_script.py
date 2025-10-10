@@ -1006,3 +1006,61 @@ def calculate_etf_value_core(comparable_companies: Dict[str, List[str]],
         'total_companies': len(tickers),
         'failed_companies': failed_companies
     }
+
+def calculate_etf_fair_value_wrapper(file_path: str,
+                                   comparable_map: Dict[str, List[str]]) -> Dict[str, any]:
+    """
+    A unified wrapper function for calculating the fair value of an ETF.
+    """
+    # 1. Load and process data from the file
+    combined_df = process_etf_file(file_path)
+
+    if combined_df is None:
+        print(f"✗ Failed to load data from file: {file_path}")
+        return {'success': False, 'error': f"Failed to load data from {file_path}"}
+
+    # 2. Create LOCAL copies of weights and shares for this ETF only
+    local_weights = {}
+    local_shares = {}
+    local_companies = {}
+
+    # Parse the DataFrame manually without using global variables
+    data = combined_df.values.tolist()
+    added_count = 0
+
+    for deal in data:
+        ticker = deal[0]
+
+        # Filter by comparable_map
+        if comparable_map and ticker not in comparable_map:
+            continue
+
+        # Store in LOCAL dictionaries
+        local_weights[ticker] = deal[2:]  # Multiplier weights
+        local_shares[ticker] = deal[1]  # Share count
+
+        if comparable_map:
+            local_companies[ticker] = comparable_map[ticker]
+
+        added_count += 1
+
+    print(f"✓ Tickers added: {added_count}")
+
+    # 3. Call the main valuation core logic with LOCAL data
+    result = calculate_etf_value_core(
+        local_companies,
+        local_weights,
+        local_shares  # Pass LOCAL shares, not global
+    )
+
+    # 4. Output results
+    if result['success']:
+        print("\n--- 💰 FINAL ETF VALUATION RESULT ---")
+        print(f"✔ ETF Current Value: €{result['current_price_etf']:,.2f}")
+        print(f"✔ ETF Fair Value: €{result['fair_value_etf']:,.2f}")
+        print(f"✔ Premium/Discount: {result['premium_discount_pct']:+.2f}%")
+        print(f"✔ Successfully Valued: {result['companies_valuated']}/{result['total_companies']} companies")
+    else:
+        print(f"✗ Error: {result.get('error')}")
+
+    return result
