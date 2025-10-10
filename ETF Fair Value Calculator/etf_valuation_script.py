@@ -42,7 +42,6 @@ from functools import lru_cache
 import warnings
 import yfinance as yf
 import pandas as pd
-import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Suppress warnings from yfinance, which can sometimes be noisy
@@ -52,7 +51,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # Dictionary mapping ETF names to CSV file paths
 # Each CSV file should contain ETF composition data: tickers, shares, valuation method weights
 etf_dict = {
-    "POLAND": "ETF Fair Value Calculator/Investments - POLAND.csv",
+    "POLAND": "Investments - POLAND.csv",
 }
 
 # Potential troubleshooting function
@@ -1064,3 +1063,11 @@ def calculate_etf_fair_value_wrapper(file_path: str,
         print(f"✗ Error: {result.get('error')}")
 
     return result
+
+if __name__ == "__main__":
+
+    for i in etf_dict:
+        result = calculate_etf_fair_value_wrapper(
+            file_path= etf_dict[i],
+            comparable_map=companies_to_value
+        )
