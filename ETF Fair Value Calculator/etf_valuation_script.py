@@ -52,7 +52,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # Dictionary mapping ETF names to CSV file paths
 # Each CSV file should contain ETF composition data: tickers, shares, valuation method weights
 etf_dict = {
-    "POLAND": "Investments - POLAND.csv",
+    "POLAND": "ETF Fair Value Calculator/Investments - POLAND.csv",
 }
 
 # Potential troubleshooting function
@@ -870,4 +870,139 @@ def valuate_company(ticker: str, multipliers: Dict[str, any],
         'peers_count': multipliers.get('peers_count', 0),
         'individual_multipliers': multipliers.get('individual_multipliers', {}),
         'weights_used': normalized_weights
+    }
+
+def calculate_etf_value_core(comparable_companies: Dict[str, List[str]],
+                            weights: Dict[str, Tuple[float, float, float]],
+                            shares_dict: Dict[str, float]) -> Dict[str, any]:
+    """
+    Core logic for calculating ETF fair value using bottom-up valuation.
+
+    Complex Multi-Stage Business Logic:
+    1. Parallel Data Retrieval: Fetches financial data for all ETF constituents concurrently
+    2. Parallel Multiplier Calculation: Computes peer-based multiples for each company in parallel
+    3. Data Validation Pipeline: Comprehensive checks for:
+       - Successful data retrieval (price, shares, financial metrics)
+       - Valid share counts and positive prices
+       - Successful multiplier calculations
+       - Positive fair value results
+    4. Result Aggregation: Sums individual company valuations to derive ETF-level values
+    5. Premium/Discount Analysis: Compares aggregate current vs. fair values
+
+    Error Handling & Resilience:
+    - Continues processing even if individual companies fail
+    - Provides detailed diagnostics for failed valuations
+    - Maintains data integrity through rigorous validation
+    - Offers transparent reporting of success/failure rates
+
+    Performance Optimization:
+    - Uses ThreadPoolExecutor for concurrent API calls
+    - Implements LRU caching to minimize redundant requests
+    - Includes strategic delays to respect API rate limits
+
+    Returns:
+        ETF valuation results with comprehensive metadata:
+        - current_price_etf: Total current market value
+        - fair_value_etf: Total calculated fair value
+        - premium_discount_pct: Aggregate premium/discount percentage
+        - companies_valuated: Count of successfully valued constituents
+        - failed_companies: Detailed list of valuation failures
+    """
+
+    # Filter tickers to include only those present in the shares dictionary
+    tickers = [t for t in comparable_companies if t in shares_dict]
+    if not tickers:
+        return {'success': False, 'error': 'No valid tickers with shared count'}
+
+    print(f"\n--- 🔍 Starting ETF analysis with {len(tickers)} tickers ---")
+
+    # 1. Parallel Data Retrieval
+    companies_data = get_multiple_companies_data(tickers)
+
+    successful_data = [t for t in tickers if companies_data.get(t, {}).get('success')]
+    failed_data = [t for t in tickers if t not in successful_data]
+    if failed_data:
+        print(f"✗ Failed to get base data for: {failed_data}")
+
+    # 2. Parallel Multiplier Calculation
+    multipliers_data = {}
+    if tickers:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            multipliers_list = list(executor.map(
+                calculate_peer_multipliers,
+                [comparable_companies[t] for t in tickers]
+            ))
+        multipliers_data = dict(zip(tickers, multipliers_list))
+
+    # 3. Final Valuation and Aggregation
+    total_current, total_fair, successful = 0.0, 0.0, 0
+    failed_companies = []
+
+    for ticker in tickers:
+        data = companies_data.get(ticker, {})
+
+        # Check 1: Ensure base data was retrieved successfully
+        if not data.get('success'):
+            failed_companies.append(f"{ticker}: no base data")
+            continue
+
+        # Check 2-3: Price and Share Count validity
+        price = data.get('price')
+        share_count = shares_dict.get(ticker)
+
+        if not price or price <= 0:
+            failed_companies.append(f"{ticker}: invalid price ({price})")
+            continue
+        if not isinstance(share_count, (int, float)) or share_count <= 0:
+            failed_companies.append(f"{ticker}: invalid share count ({share_count})")
+            continue
+
+        current_value = price * share_count
+
+        # Check 4: Fair Price Calculation Readiness
+        if ticker not in multipliers_data or not multipliers_data[ticker]:
+            failed_companies.append(f"{ticker}: multipliers not calculated")
+            continue
+
+        # Call valuate_company and extract the result
+        valuation_result = valuate_company(ticker, multipliers_data[ticker], weights)
+
+        # Check if valuation was successful
+        if not valuation_result.get('success'):
+            failed_companies.append(f"{ticker}: valuation failed - {valuation_result.get('error', 'unknown error')}")
+            continue
+
+        # Extract fair_price from the result dictionary
+        fair_price = valuation_result.get('fair_price')
+
+        if not fair_price or fair_price <= 0:
+            failed_companies.append(f"{ticker}: failed to calculate fair_price (result {fair_price})")
+            continue
+
+        # Aggregate successful valuations
+        total_current += current_value
+        total_fair += fair_price * share_count
+        successful += 1
+        print(f"✔ Successfully valued {ticker}: price {price:.2f} → fair {fair_price:.2f}")
+
+    # Output detailed error information
+    if failed_companies:
+        print("\n🔍 Problematic companies:")
+        for error in failed_companies:
+            print(f"   {error}")
+
+    if successful == 0 or total_current == 0:
+        return {'success': False, 'error': f'Valuation failed. Successfully valued 0 out of {len(tickers)}.'}
+
+    # Calculate Premium/Discount
+    premium_discount = ((total_fair - total_current) / total_current) * 100
+
+    return {
+        'success': True,
+        'current_price_etf': total_current,
+        'fair_value_etf': total_fair,
+        'premium_discount_pct': premium_discount,
+        'companies_valuated': successful,
+        'total_companies': len(tickers),
+        'failed_companies': failed_companies
     }
