@@ -500,90 +500,433 @@ def calculate_peer_multipliers(peers: List[str]) -> Dict:
 
     return result
 
-def valuate_company(ticker: str, multipliers: Dict, weights: Dict) -> Dict:
+def valuate_company(ticker: str, multipliers: Dict[str, any],
+                    weights: Dict[str, Tuple[float, float, float]]) -> Dict[str, any]:
     """
-    Calculates a company's fair value based on average peer multiples.
+    Values a company using comparable company analysis methodology.
 
-    Args:
-        ticker: The ticker of the target company.
-        multipliers: A dictionary of average peer multiples.
-        weights: A dictionary with user-defined weights for each ticker.
+    Complex Business Logic:
+    - Weight Redistribution: Automatically redistributes weights when valuation methods are unavailable
+    - Multi-Method Valuation: Applies EV/EBITDA, P/E, and P/S methods with configurable weights
+    - Data Validation: Comprehensive checks for data availability and quality
+
+    Weight Redistribution Example:
+    Initial weights: [0.4, 0.3, 0.3] for [EV/EBITDA, P/E, P/S]
+    If P/E data unavailable → New weights: [0.4/(0.4+0.3), 0, 0.3/(0.4+0.3)] = [0.57, 0, 0.43]
+
+    Valuation Methods:
+    - EV/EBITDA: Fair Price = (Peer EV/EBITDA × Company EBITDA - Debt + Cash) / Shares
+    - P/E: Fair Price = Peer P/E × Company EPS
+    - P/S: Fair Price = Peer P/S × (Company Revenue / Shares)
     """
-    data = get_company_data(ticker, verbose=True)
-    if not data['success']:
-        return {'success': False, 'error': 'Failed to fetch target company data'}
+    data = get_company_data(ticker)
 
-    # Get the valuation weights for the current ticker. Use default weights if not specified.
-    w_ev_ebitda, w_pe, w_ps = weights.get(ticker, (0.33, 0.33, 0.33))
+    # Check for base data failure
+    if not data or not data.get('success'):
+        return {
+            'success': False,
+            'error': 'Failed to fetch target company data',
+            'ticker': ticker
+        }
 
-    final_fair_price = 0
-    total_weights = 0
+    # Get weights for this ticker
+    w_ev, w_pe, w_ps = weights.get(ticker, (0.33, 0.33, 0.33))
+
+    # Method availability checks
+    # EV/EBITDA Check
+    ev_m = multipliers.get('ev_ebitda')
+    ev_ebitda = data.get('ebitda')
+    ev_shares = data.get('shares')
+    ev_available = (
+            ev_m is not None and ev_ebitda is not None and ev_shares is not None
+            and ev_ebitda != 0 and ev_shares != 0
+    )
+
+    # P/E Check
+    pe_m = multipliers.get('p_e')
+    pe_eps = data.get('eps')
+    pe_available = (pe_m is not None and pe_eps is not None and pe_eps != 0)
+
+    # P/S Check
+    ps_m = multipliers.get('p_s')
+    ps_revenue = data.get('revenue')
+    ps_shares = data.get('shares')
+    ps_available = (
+            ps_m is not None and ps_revenue is not None and ps_shares is not None
+            and ps_shares != 0 and ps_revenue != 0
+    )
+
+    # Weight redistribution logic
+    available_weights = {}
+    if ev_available: available_weights['ev'] = w_ev
+    if pe_available: available_weights['pe'] = w_pe
+    if ps_available: available_weights['ps'] = w_ps
+
+    if not available_weights:
+        return {
+            'success': False,
+            'error': 'Not enough data to perform valuation',
+            'ticker': ticker
+        }
+
+    total_initial_weight = sum(available_weights.values())
+    if total_initial_weight == 0:
+        return {
+            'success': False,
+            'error': 'All available methods have zero weight',
+            'ticker': ticker
+        }
+
+    # Normalize weights: distribute unavailable weight to available methods
+    normalized_weights = {key: value / total_initial_weight for key, value in available_weights.items()}
+
+    # Valuation calculations
+    valuation_options = []
     calculations = {}
 
-    # Check for missing data and re-distribute weights if necessary
-    if multipliers['ev_ebitda'] is None or data['ebitda'] is None or data['shares'] is None or data['shares'] == 0:
-        print("⚠️ Insufficient data for EV/EBITDA. Its weight will be reallocated.")
-        if w_pe > 0:
-            w_pe += w_ev_ebitda / 2
-        if w_ps > 0:
-            w_ps += w_ev_ebitda / 2
-        w_ev_ebitda = 0
+    # EV/EBITDA (Debt and Cash use default 0 if missing)
+    if 'ev' in normalized_weights:
+        ebitda_val = data['ebitda']
+        ev = multipliers['ev_ebitda'] * ebitda_val
+        price_ev = (ev - data.get('debt', 0) + data.get('cash', 0)) / data['shares']
+        if price_ev > 0:
+            valuation_options.append((price_ev, normalized_weights['ev']))
+            calculations['ev_ebitda'] = price_ev
 
-    # EV/EBITDA method
-    if w_ev_ebitda > 0:
-        ev = multipliers['ev_ebitda'] * data['ebitda']
-        # Handle potential zero values
-        if data['shares'] != 0:
-            price_ev = (ev - (data['debt'] or 0) + (data['cash'] or 0)) / data['shares']
-            if price_ev > 0:
-                final_fair_price += price_ev * w_ev_ebitda
-                total_weights += w_ev_ebitda
-                calculations['ev_ebitda'] = price_ev
-
-    # P/E method
-    if multipliers['p_e'] is None or data['eps'] is None:
-        print("⚠️ Insufficient data for P/E. This method will not be used.")
-        w_pe = 0
-
-    if w_pe > 0:
+    # P/E
+    if 'pe' in normalized_weights:
         price_pe = multipliers['p_e'] * data['eps']
         if price_pe > 0:
-            final_fair_price += price_pe * w_pe
-            total_weights += w_pe
+            valuation_options.append((price_pe, normalized_weights['pe']))
             calculations['p_e'] = price_pe
 
-    # P/S method
-    if multipliers['p_s'] is None or data['revenue'] is None or data['shares'] is None or data['shares'] == 0:
-        print("⚠️ Insufficient data for P/S. This method will not be used.")
-        w_ps = 0
+    # P/S
+    if 'ps' in normalized_weights:
+        sales_per_share = data['revenue'] / data['shares']
+        price_ps = multipliers['p_s'] * sales_per_share
+        if price_ps > 0:
+            valuation_options.append((price_ps, normalized_weights['ps']))
+            calculations['p_s'] = price_ps
 
-    if w_ps > 0:
-        if data['shares'] != 0:
-            sales_per_share = data['revenue'] / data['shares']
-            if sales_per_share != 0:
-                price_ps = multipliers['p_s'] * sales_per_share
-                if price_ps > 0:
-                    final_fair_price += price_ps * w_ps
-                    total_weights += w_ps
-                    calculations['p_s'] = price_ps
+    if not valuation_options:
+        return {
+            'success': False,
+            'error': 'No valid positive valuation results',
+            'ticker': ticker
+        }
 
-    if total_weights == 0:
-        return {'success': False, 'error': 'Not enough data to perform valuation'}
+    # Calculate Weighted Average
+    final_price = sum(p * w for p, w in valuation_options) / sum(w for p, w in valuation_options)
+    final_price_rounded = round(final_price, 2)
 
-    # Normalize weights and calculate the final weighted price
-    final_price = final_fair_price / total_weights
+    # Calculate premium/discount
+    current_price = data.get('price')
+    premium_discount = None
+    if current_price and current_price > 0:
+        premium_discount = round((final_price_rounded / current_price - 1) * 100, 1)
+
+    # Print method availability info
+    print(f"\n--- VALUATION METHODS USED FOR {ticker} ---")
+    if 'ev' in normalized_weights:
+        print(f"✓ EV/EBITDA method: weight {normalized_weights['ev']:.2f}")
+    else:
+        print("✗ EV/EBITDA method: insufficient data")
+
+    if 'pe' in normalized_weights:
+        print(f"✓ P/E method: weight {normalized_weights['pe']:.2f}")
+    else:
+        print("✗ P/E method: insufficient data")
+
+    if 'ps' in normalized_weights:
+        print(f"✓ P/S method: weight {normalized_weights['ps']:.2f}")
+    else:
+        print("✗ P/S method: insufficient data")
+    print("----------------------------------------")
 
     return {
         'success': True,
         'ticker': ticker,
-        'company_name': data['name'],
-        'current_price': data['price'],
-        'fair_price': round(final_price, 2),
-        'premium_discount': round((final_price / data['price'] - 1) * 100, 1) if data['price'] else None,
+        'company_name': data.get('name', ticker),
+        'current_price': current_price,
+        'fair_price': final_price_rounded,
+        'premium_discount': premium_discount,
         'calculations': calculations,
-        'peers_used': multipliers['successful_peers'],
-        'peers_count': multipliers['peers_count']
+        'peers_used': multipliers.get('successful_peers', []),
+        'peers_count': multipliers.get('peers_count', 0),
+        'individual_multipliers': multipliers.get('individual_multipliers', {}),
+        'weights_used': normalized_weights
     }
+
+# --- ETF Valuation Extension ---
+
+def process_etf_file(file_path):
+    """
+    Optimized function for processing the investment portfolio file (CSV).
+    """
+    # Define required columns for a valid ETF portfolio file
+    required_cols = ['ticker', 'share', 'price_ev_w', 'price_pe_w', 'price_ps_w']
+
+    # Create a dictionary for on-the-fly conversion of ',' to '.' and to float
+    # This handles common locale issues in CSV files.
+    converters_dict = {
+        col: lambda x: float(str(x).replace(',', '.'))
+        for col in ['share', 'price_ev_w', 'price_pe_w', 'price_ps_w']
+    }
+
+    try:
+        # Read CSV file using the defined converters
+        df = pd.read_csv(file_path, converters=converters_dict)
+
+        # Check for presence of all required columns
+        if not all(col in df.columns for col in required_cols):
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            print(f"✗ File {file_path} is missing required columns: {missing_cols}")
+            return None
+
+        # Select necessary columns and drop rows with any missing data (NaN)
+        combined_df = df[required_cols].dropna(how='any')
+
+        print(f"✔ Processed file {file_path}: {len(combined_df)} records")
+        return combined_df
+
+    except FileNotFoundError:
+        print(f"✗ Error: File not found at path {file_path}")
+        return None
+    except Exception as e:
+        print(f"✗ Error processing file {file_path}: {e}")
+        return None
+
+# Function to add portfolio data from the processed DataFrame
+def load_and_filter_portfolio_data(combined_df, companies_to_value=None, overwrite=False):
+    """Simplified version of adding portfolio data (weights, shares)."""
+    global weights, shares, companies_to_evaluate
+
+    if combined_df is None:
+        print("✗ Error: combined_df is None")
+        return companies_to_evaluate
+
+    # Convert DataFrame to a list of lists for iteration
+    data = combined_df.values.tolist() if hasattr(combined_df, 'values') else combined_df
+
+    added_count = 0
+
+    for deal in data:
+        ticker = deal[0]
+
+        # Filter by the map of comparable companies, if provided
+        if companies_to_value and ticker not in companies_to_value:
+            continue
+
+        # Check for overwrite permission
+        if not overwrite and ticker in weights:
+            continue
+
+        # Update global data
+        weights[ticker] = deal[2:] # Multiplier weights start at index 2
+        shares[ticker] = deal[1]   # Share count is at index 1
+
+        if companies_to_value:
+            companies_to_evaluate[ticker] = companies_to_value[ticker]
+
+        added_count += 1
+
+    print(f"✓ Tickers added: {added_count}")
+    return companies_to_evaluate
+
+def calculate_etf_value_core(comparable_companies: Dict[str, List[str]],
+                             weights: Dict,
+                             shares_dict: Dict[str, float]) -> Dict:
+    """
+    Core logic for calculating ETF fair value using bottom-up valuation.
+
+    Complex Multi-Stage Business Logic:
+    1. Parallel Data Retrieval: Fetches financial data for all ETF constituents concurrently
+    2. Parallel Multiplier Calculation: Computes peer-based multiples for each company in parallel
+    3. Data Validation Pipeline: Comprehensive checks for:
+       - Successful data retrieval (price, shares, financial metrics)
+       - Valid share counts and positive prices
+       - Successful multiplier calculations
+       - Positive fair value results
+    4. Result Aggregation: Sums individual company valuations to derive ETF-level values
+    5. Premium/Discount Analysis: Compares aggregate current vs. fair values
+
+    Error Handling & Resilience:
+    - Continues processing even if individual companies fail
+    - Provides detailed diagnostics for failed valuations
+    - Maintains data integrity through rigorous validation
+    - Offers transparent reporting of success/failure rates
+
+    Performance Optimization:
+    - Uses ThreadPoolExecutor for concurrent API calls
+    - Implements LRU caching to minimize redundant requests
+    - Includes strategic delays to respect API rate limits
+
+    Returns:
+        ETF valuation results with comprehensive metadata:
+        - current_price_etf: Total current market value
+        - fair_value_etf: Total calculated fair value
+        - premium_discount_pct: Aggregate premium/discount percentage
+        - companies_valuated: Count of successfully valued constituents
+        - failed_companies: Detailed list of valuation failures
+    """
+
+    # Filter tickers to include only those present in the shares dictionary
+    tickers = [t for t in comparable_companies if t in shares_dict]
+    if not tickers:
+        return {'success': False, 'error': 'No valid tickers with shared count'}
+
+    print(f"\n--- 🔍 Starting ETF analysis with {len(tickers)} tickers ---")
+
+    # 1. Parallel Data Retrieval
+    companies_data = get_multiple_companies_data(tickers)
+
+    successful_data = [t for t in tickers if companies_data.get(t, {}).get('success')]
+    failed_data = [t for t in tickers if t not in successful_data]
+    if failed_data:
+        print(f"✗ Failed to get base data for: {failed_data}")
+
+    # 2. Parallel Multiplier Calculation
+    multipliers_data = {}
+    if tickers:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            multipliers_list = list(executor.map(
+                calculate_peer_multipliers,
+                [comparable_companies[t] for t in tickers]
+            ))
+        multipliers_data = dict(zip(tickers, multipliers_list))
+
+    # 3. Final Valuation and Aggregation
+    total_current, total_fair, successful = 0.0, 0.0, 0
+    failed_companies = []
+
+    for ticker in tickers:
+        data = companies_data.get(ticker, {})
+
+        # Check 1: Ensure base data was retrieved successfully
+        if not data.get('success'):
+            failed_companies.append(f"{ticker}: no base data")
+            continue
+
+        # Check 2-3: Price and Share Count validity
+        price = data.get('price')
+        share_count = shares_dict.get(ticker)
+
+        if not price or price <= 0:
+            failed_companies.append(f"{ticker}: invalid price ({price})")
+            continue
+        if not isinstance(share_count, (int, float)) or share_count <= 0:
+            failed_companies.append(f"{ticker}: invalid share count ({share_count})")
+            continue
+
+        current_value = price * share_count
+
+        # Check 4: Fair Price Calculation Readiness
+        if ticker not in multipliers_data or not multipliers_data[ticker]:
+            failed_companies.append(f"{ticker}: multipliers not calculated")
+            continue
+
+        # Call valuate_company and extract the result
+        valuation_result = valuate_company(ticker, multipliers_data[ticker], weights)
+
+        # Check if valuation was successful
+        if not valuation_result.get('success'):
+            failed_companies.append(f"{ticker}: valuation failed - {valuation_result.get('error', 'unknown error')}")
+            continue
+
+        # Extract fair_price from the result dictionary
+        fair_price = valuation_result.get('fair_price')
+
+        if not fair_price or fair_price <= 0:
+            failed_companies.append(f"{ticker}: failed to calculate fair_price (result {fair_price})")
+            continue
+
+        # Aggregate successful valuations
+        total_current += current_value
+        total_fair += fair_price * share_count
+        successful += 1
+        print(f"✔ Successfully valued {ticker}: price {price:.2f} → fair {fair_price:.2f}")
+
+    # Output detailed error information
+    if failed_companies:
+        print("\n🔍 Problematic companies:")
+        for error in failed_companies:
+            print(f"   {error}")
+
+    if successful == 0 or total_current == 0:
+        return {'success': False, 'error': f'Valuation failed. Successfully valued 0 out of {len(tickers)}.'}
+
+    # Calculate Premium/Discount
+    premium_discount = ((total_fair - total_current) / total_current) * 100
+
+    return {
+        'success': True,
+        'current_price_etf': total_current,
+        'fair_value_etf': total_fair,
+        'premium_discount_pct': premium_discount,
+        'companies_valuated': successful,
+        'total_companies': len(tickers),
+        'failed_companies': failed_companies
+    }
+
+def calculate_etf_fair_value_wrapper(file_path: str,
+                                     comparable_map: Dict[str, List[str]]) -> Dict:
+    """
+    A unified wrapper function for calculating the fair value of an ETF.
+    """
+    # 1. Load and process data from the file
+    combined_df = process_etf_file(file_path)
+
+    if combined_df is None:
+        print(f"✗ Failed to load data from file: {file_path}")
+        return {'success': False, 'error': f"Failed to load data from {file_path}"}
+
+    # 2. Create LOCAL copies of weights and shares for this ETF only
+    local_weights = {}
+    local_shares = {}
+    local_companies = {}
+
+    # Parse the DataFrame manually without using global variables
+    data = combined_df.values.tolist()
+    added_count = 0
+
+    for deal in data:
+        ticker = deal[0]
+
+        # Filter by comparable_map
+        if comparable_map and ticker not in comparable_map:
+            continue
+
+        # Store in LOCAL dictionaries
+        local_weights[ticker] = deal[2:]  # Multiplier weights
+        local_shares[ticker] = deal[1]  # Share count
+
+        if comparable_map:
+            local_companies[ticker] = comparable_map[ticker]
+
+        added_count += 1
+
+    print(f"✓ Tickers added: {added_count}")
+
+    # 3. Call the main valuation core logic with LOCAL data
+    result = calculate_etf_value_core(
+        local_companies,
+        local_weights,
+        local_shares
+    )
+
+    # 4. Output results
+    if result['success']:
+        print("\n--- 💰 FINAL ETF VALUATION RESULT ---")
+        print(f"✔ ETF Current Value: €{result['current_price_etf']:,.2f}")
+        print(f"✔ ETF Fair Value: €{result['fair_value_etf']:,.2f}")
+        print(f"✔ Premium/Discount: {result['premium_discount_pct']:+.2f}%")
+        print(f"✔ Successfully Valued: {result['companies_valuated']}/{result['total_companies']} companies")
+    else:
+        print(f"✗ Error: {result.get('error')}")
+
+    return result
+
+# -------------------------------
 
 def run_valuation(comparable_companies: Dict[str, List[str]], weights: Dict) -> List[Dict]:
     """
@@ -669,5 +1012,3 @@ def run_valuation(comparable_companies: Dict[str, List[str]], weights: Dict) -> 
     return valuation_results
 
 # --- Main Execution ---
-if __name__ == "__main__":
-    results = run_valuation(companies_to_evaluate, weights)
