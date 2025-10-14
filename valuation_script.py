@@ -928,87 +928,190 @@ def calculate_etf_fair_value_wrapper(file_path: str,
 
 # -------------------------------
 
-def run_valuation(comparable_companies: Dict[str, List[str]], weights: Dict) -> List[Dict]:
+def run_valuation(stocks_dict: Dict[str, str],
+                  companies_to_value: Optional[Dict[str, List[str]]] = None) -> List[Dict[str, any]]:
     """
-    Main function to run the valuation for a dictionary of companies.
+    Main function to run valuation for multiple stock files and ETFs in parallel.
 
-    Args:
-        comparable_companies: A dictionary mapping target tickers to a list of peer tickers.
-        weights: A dictionary of valuation weights for each ticker.
+    Complex Business Logic:
+    - Parallel Processing: Uses ThreadPoolExecutor for concurrent file processing
+    - ETF Integration: Processes ETFs separately from regular stocks
+    - Result Aggregation: Combines results from multiple sources into unified summary
+    - Error Resilience: Continues processing even if individual valuations fail
+
+    Processing Pipeline:
+    1. Sequential ETF valuation (due to complex interdependencies)
+    2. Parallel stock file processing
+    3. Comprehensive result aggregation and reporting
     """
-    valuation_results = []
+    all_valuation_results = []
     currency_symbol = "€"
+    print_lock = threading.Lock()
 
-    for base_ticker, peers in comparable_companies.items():
-        base_company_data = get_company_data(base_ticker, verbose=False)
-        company_name = base_company_data.get('name', base_ticker)
+    def process_single_file(stock_name: str, file_path: str) -> List[Dict]:
+        """Process a single file"""
+        file_results = []
 
-        print(f"\n{'=' * 50}")
-        print(f"VALUATION: {company_name} ({base_ticker})")
-        print(f"{'=' * 50}")
+        with print_lock:
+            print(f"\n{'=' * 60}")
+            print(f"PROCESSING: {stock_name} ({file_path})")
+            print(f"{'=' * 60}")
 
+        # Prepare data from CSV file
         try:
-            print("Fetching peer company data...")
-            multipliers = calculate_peer_multipliers(peers)
+            weights, companies_to_evaluate = prepare_csv_data(file_path, companies_to_value)
+            with print_lock:
+                print(f"✓ Loaded weights for {len(weights)} companies from {stock_name}")
+        except (FileNotFoundError, ValueError) as e:
+            with print_lock:
+                print(f"✗ Error loading file {stock_name}: {e}")
+            return file_results
 
-            if multipliers['peers_count'] == 0:
-                print(f"✗ Failed to get data for any peers for {base_ticker}")
+        comparable_companies = companies_to_evaluate
+
+        # Value each company in the current file
+        for base_ticker, peers in comparable_companies.items():
+            if base_ticker not in weights:
+                with print_lock:
+                    print(f"⚠ Ticker {base_ticker} not found in file {stock_name}, skipping...")
                 continue
 
-            print(f"\nPeers found: {multipliers['peers_count']}")
+            base_company_data = get_company_data(base_ticker, verbose=False)
+            company_name = base_company_data.get('name', base_ticker)
 
-            print("Calculating fair price...")
-            valuation = valuate_company(base_ticker, multipliers, weights)
+            with print_lock:
+                print(f"\n{'-' * 40}")
+                print(f"VALUATION: {company_name} ({base_ticker}) - {stock_name}")
+                print(f"{'-' * 40}")
 
-            if valuation['success']:
-                current = valuation['current_price']
-                fair = valuation['fair_price']
-                difference = ((fair - current) / current) * 100 if current else None
+            try:
+                with print_lock:
+                    print(f"[{stock_name}] Fetching peer company data for {base_ticker}...")
+                multipliers = calculate_peer_multipliers(peers)
 
-                print(f"✔ Current Price: {currency_symbol}{current:,.2f}")
-                print(f"✔ Fair Price: {currency_symbol}{fair:,.2f}")
+                if multipliers['peers_count'] == 0:
+                    with print_lock:
+                        print(f"✗ Failed to get data for any peers for {base_ticker}")
+                    continue
 
-                valuation_results.append({
-                    "Ticker": base_ticker,
-                    "Company": valuation['company_name'],
-                    "Fair Price": fair,
-                    "Current Price": current,
-                    "Difference (%)": difference
-                })
-            else:
-                print(f"✗ Valuation error: {valuation.get('error', 'Unknown error')}")
+                with print_lock:
+                    print(f"[{stock_name}] Peers found: {multipliers['peers_count']}")
+                    print(f"[{stock_name}] Calculating fair price for {base_ticker}...")
 
-        except Exception as e:
-            error_msg = f"Critical error during valuation of {base_ticker}: {e}"
-            print(f"✗ {error_msg}")
+                valuation = valuate_company(base_ticker, multipliers, weights)
+
+                if valuation['success']:
+                    current = valuation['current_price']
+                    fair = valuation['fair_price']
+                    difference = ((fair - current) / current) * 100 if current else None
+
+                    with print_lock:
+                        print(
+                            f"✔ [{stock_name}] {base_ticker} - Current: {currency_symbol}{current:,.2f}, Fair: {currency_symbol}{fair:,.2f}")
+
+                    file_results.append({
+                        "Type": "Stock",
+                        "Source": stock_name,
+                        "Ticker": base_ticker,
+                        "Company": valuation['company_name'],
+                        "Fair Price": fair,
+                        "Current Price": current,
+                        "Difference (%)": difference
+                    })
+                else:
+                    with print_lock:
+                        print(
+                            f"✗ [{stock_name}] Valuation error for {base_ticker}: {valuation.get('error', 'Unknown error')}")
+
+            except Exception as e:
+                with print_lock:
+                    print(f"✗ [{stock_name}] Critical error during valuation of {base_ticker}: {e}")
+
+        with print_lock:
+            print(f"✓ Completed processing file {stock_name}: {len(file_results)} companies valued")
+
+        return file_results
+
+    # Process ETFs SEPARATELY before processing stock files
+    print(f"\n{'=' * 60}")
+    print("PROCESSING ETFs")
+    print(f"{'=' * 60}")
+
+    etf_results = []
+    for etf_name, etf_file in etf_dict.items():
+        with print_lock:
+            print(f"\nProcessing ETF: {etf_name}")
+
+        res = calculate_etf_fair_value_wrapper(
+            file_path=etf_file,
+            comparable_map=companies_to_value
+        )
+
+        if res['success']:
+            etf_results.append({
+                "Type": "ETF",
+                "Source": "ETF Portfolio",
+                "Ticker": etf_name,
+                "Company": f"ETF {etf_name}",
+                "Fair Price": res['fair_value_etf'],
+                "Current Price": res['current_price_etf'],
+                "Difference (%)": res['premium_discount_pct']
+            })
+            with print_lock:
+                print(f"✔ ETF {etf_name} processed successfully")
+        else:
+            with print_lock:
+                print(f"✗ ETF valuation failed for {etf_name}: {res.get('error')}")
+
+    all_valuation_results.extend(etf_results)
+
+    # Parallel file processing for regular stocks
+    print(f"\n🚀 Starting parallel processing of {len(stocks_dict)} stock files...")
+
+    with ThreadPoolExecutor(max_workers=min(len(stocks_dict), 4)) as executor:
+        future_to_file = {
+            executor.submit(process_single_file, stock_name, file_path): stock_name
+            for stock_name, file_path in stocks_dict.items()
+        }
+
+        for future in as_completed(future_to_file):
+            stock_name = future_to_file[future]
+            try:
+                file_results = future.result()
+                all_valuation_results.extend(file_results)
+                print(f"✔ File {stock_name} processed successfully")
+            except Exception as exc:
+                print(f"✗ File {stock_name} raised an exception: {exc}")
 
     # --- Print Final Summary Table ---
-    print(f"\n\n{'=' * 50}")
-    print("FINAL VALUATION SUMMARY")
-    print(f"{'=' * 50}")
+    print(f"\n\n{'=' * 70}")
+    print("FINAL VALUATION SUMMARY - ALL STOCKS & ETFs")
+    print(f"{'=' * 70}")
 
-    if not valuation_results:
+    if not all_valuation_results:
         print("No companies were successfully valued.")
         return []
 
-    # Sort results by the percentage difference in descending order
-    sorted_results = sorted(valuation_results,
+    sorted_results = sorted(all_valuation_results,
                             key=lambda x: x['Difference (%)'] if x['Difference (%)'] is not None else -math.inf,
                             reverse=True)
 
-    # Create a DataFrame for a clean output
     df_results = pd.DataFrame(sorted_results)
 
-    # Format columns for better readability
     df_results['Fair Price'] = df_results['Fair Price'].apply(
         lambda x: f"{currency_symbol}{x:,.2f}" if pd.notna(x) else "N/A")
     df_results['Current Price'] = df_results['Current Price'].apply(
         lambda x: f"{currency_symbol}{x:,.2f}" if pd.notna(x) else "N/A")
-    df_results['Difference (%)'] = df_results['Difference (%)'].apply(lambda x: f"{x:+.1f}%" if pd.notna(x) else "N/A")
+    df_results['Difference (%)'] = df_results['Difference (%)'].apply(
+        lambda x: f"{x:+.1f}%" if pd.notna(x) else "N/A")
 
-    # Print the final table
     print(df_results.to_string(index=False))
 
-    return valuation_results
+    print(f"\nTotal items valued: {len(all_valuation_results)}")
+    print(f"  - ETFs: {len([r for r in all_valuation_results if r.get('Type') == 'ETF'])}")
+    print(f"  - Stocks: {len([r for r in all_valuation_results if r.get('Type') == 'Stock'])}")
+    print(f"Files processed: {len(stocks_dict)}")
+
+    return all_valuation_results
 
 # --- Main Execution ---
