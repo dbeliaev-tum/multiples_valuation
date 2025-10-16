@@ -1114,6 +1114,7 @@ def run_valuation(stocks_dict: Dict[str, str],
 
     return all_valuation_results
 
+
 # --- Main Execution ---
 if __name__ == "__main__":
     results = run_valuation(stocks_dict,companies_to_value)
