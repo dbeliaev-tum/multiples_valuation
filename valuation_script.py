@@ -236,13 +236,16 @@ companies_to_value = {
 
 # Dictionary mapping ETF names to CSV file paths
 etf_dict = {
-    "POLAND": "Investments - POLAND.csv"
+    "POLAND": "samples/msci_poland.csv"
 }
 
 # Dictionary mapping stock portfolio names to CSV file paths
 stocks_dict = {
-    "Sample": "sample_deals_yahoo.csv"
-    # "Test": "test_deals_yahoo.csv"
+    # Data of the already purchased shares
+    "Sample": "samples/sample_deals_yahoo.csv"
+
+    # # Data of the shares under consideration for purchase
+    # "Test": "samples/test_deals_yahoo.csv"
 }
 
 # --- Data Preparation ---

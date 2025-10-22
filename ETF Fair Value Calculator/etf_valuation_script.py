@@ -51,7 +51,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # Dictionary mapping ETF names to CSV file paths
 # Each CSV file should contain ETF composition data: tickers, shares, valuation method weights
 etf_dict = {
-    "POLAND": "Investments - POLAND.csv",
+    "POLAND": "samples/msci_poland.csv",
 }
 
 # Potential troubleshooting function

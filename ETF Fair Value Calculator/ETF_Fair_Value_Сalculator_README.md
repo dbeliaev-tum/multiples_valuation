@@ -40,7 +40,7 @@ Modify the `etf_dict` in the script to point to your CSV files:
 ```python
 etf_dict = {
     "DAX": "Investments - DAX.csv",
-    "POLAND": "Investments - POLAND.csv",
+    "POLAND": "msci_poland.csv",
     # Add more ETFs as needed
 }
 ```
