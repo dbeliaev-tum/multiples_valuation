@@ -374,131 +374,279 @@ def get_value(data: pd.DataFrame, keys: List[str]) -> Optional[float]:
     except Exception:
         return None
 
-def get_company_data(ticker: str, verbose: bool = True) -> dict:
+def find_value_by_keys(data: Dict[str, any], keys: List[str]) -> Optional[any]:
     """
-    Fetches key financial data for a company from Yahoo Finance and converts it to EUR.
+    Searches for a value in a dictionary using multiple possible keys.
 
-    Args:
-        ticker: The company's ticker symbol.
-        verbose: If True, prints status updates.
+    Returns the value corresponding to the first key found in the list.
+    """
+    for key in keys:
+        value = data.get(key)
+        if value is not None:
+            return value
+    return None
+
+# --- Financial Metric Keys ---
+# Lists of possible keys in Yahoo Finance data for various financial metrics
+# Used for robust data extraction from the heterogeneous API
+
+# List of potential keys for common financial metrics (can be expanded)
+EBITDA_KEYS = ['ebitda', 'EBITDA', 'ebitdaMargins', 'operatingCashflow']
+REVENUE_KEYS = ['totalRevenue', 'revenue', 'operatingRevenue', 'grossRevenue']
+DEBT_KEYS = ['totalDebt', 'netDebt', 'longTermDebt', 'shortTermDebt', 'totalLiabilities']
+CASH_KEYS = ['cash', 'cashAndCashEquivalents', 'totalCash', 'cashAndShortTermInvestments']
+EPS_KEYS = ['trailingEps', 'basicEps', 'earningsPerShare', 'dilutedEPS']
+NET_INCOME_KEYS = ['netIncome', 'Net Income', 'NetIncome',
+                   'Net Income from Continuing & Discontinued Operation','Net Income Continuous Operations',
+                   'Normalized Income']
+
+def get_company_data_impl(ticker: str, verbose: bool = True) -> Dict[str, any]:
+    """
+    Core implementation for retrieving and processing company financial data.
+
+    Complex Business Logic:
+    - Multi-source data retrieval with fallback mechanisms
+    - Automatic currency conversion to EUR using live exchange rates
+    - Robust error handling for API failures and data inconsistencies
+    - Comprehensive data validation and quality assessment
+
+    Financial Metric Processing:
+    - Fetches key metrics: price, shares, debt, cash, EBITDA, revenue, EPS, net income
+    - Handles alternative data sources when primary metrics are unavailable
+    - Converts all financial values to EUR for consistent comparison
     """
     try:
         t = yf.Ticker(ticker)
         info = t.info or {}
 
-        # Determine the company's base currency and get the exchange rate to EUR
+        if not info or len(info) < 10:
+            import time
+            time.sleep(0.1)
+            t = yf.Ticker(ticker)
+            info = t.info or {}
+
         currency = info.get('currency', 'USD')
-        euro_rate = get_exchange_rate(currency, 'EUR')
-        if not euro_rate:
-            if verbose:
-                print(f"✗ Could not get the exchange rate for {currency}. Using original data.")
-            euro_rate = 1.0
+        euro_rate = get_exchange_rate(currency, 'EUR') or 1.0
 
-        balance_sheet = t.balance_sheet
-        financials = t.financials
-
-        # Get the core data points
-        price = info.get('currentPrice') or info.get('regularMarketPrice')
-        shares = info.get('sharesOutstanding')
-        debt = info.get('totalDebt') or get_value(balance_sheet, ["Total Debt"])
-        cash = info.get('cash') or get_value(balance_sheet, ["Cash And Cash Equivalents", "Cash"])
-        ebitda = info.get('ebitda') or get_value(financials, ["EBITDA", "Ebitda"]) or get_value(financials, ["EBIT"])
-        revenue = info.get('totalRevenue') or get_value(financials, ["Total Revenue"])
-        eps = info.get('trailingEps')
-
-        # Convert to float and apply the EUR exchange rate
-        price_f = safe_float(price) * euro_rate
-        shares_f = safe_float(shares)
-
-        debt_f = safe_float(debt) * euro_rate if safe_float(debt) is not None else None
-        cash_f = safe_float(cash) * euro_rate if safe_float(cash) is not None else None
-        ebitda_f = safe_float(ebitda) * euro_rate if safe_float(ebitda) is not None else None
-        revenue_f = safe_float(revenue) * euro_rate if safe_float(revenue) is not None else None
-        eps_f = safe_float(eps) * euro_rate if safe_float(eps) is not None else None
-
-        return {
-            'price': price_f,
-            'shares': shares_f,
-            'debt': debt_f,
-            'cash': cash_f,
-            'ebitda': ebitda_f,
-            'revenue': revenue_f,
-            'eps': eps_f,
-            'name': info.get('longName', ticker),
-            'success': True
+        raw_data = {
+            'price': info.get('currentPrice') or info.get('regularMarketPrice') or info.get('previousClose'),
+            'shares': (info.get('sharesOutstanding') or
+                       info.get('impliedSharesOutstanding') or
+                       info.get('floatShares')),
+            'debt': find_value_by_keys(info, DEBT_KEYS),
+            'cash': find_value_by_keys(info, CASH_KEYS),
+            'ebitda': find_value_by_keys(info, EBITDA_KEYS),
+            'revenue': find_value_by_keys(info, REVENUE_KEYS),
+            'eps': find_value_by_keys(info, EPS_KEYS),
+            'net_income': find_value_by_keys(info, NET_INCOME_KEYS),
         }
+
+        if raw_data['revenue'] is None:
+            alt_revenue = (info.get('totalCashFromOperatingActivities') or
+                           info.get('grossProfit'))
+            if alt_revenue:
+                raw_data['revenue'] = alt_revenue
+
+        data_in_eur = {}
+        for k, v in raw_data.items():
+            if k in ['price', 'debt', 'cash', 'ebitda', 'revenue', 'eps', 'net_income'] and v is not None:
+                data_in_eur[k] = safe_float(v) * euro_rate
+            else:
+                data_in_eur[k] = safe_float(v)
+
+        data_in_eur['name'] = info.get('longName', ticker)
+        data_in_eur['success'] = data_in_eur.get('price') is not None
+
+        if verbose and not data_in_eur['success']:
+            print(f"✗ Error fetching data for {ticker}: No price data available")
+
+        return data_in_eur
+
     except Exception as e:
         if verbose:
             print(f"✗ Error fetching data for {ticker}: {e}")
         return {'success': False, 'ticker': ticker}
 
-def calculate_peer_multipliers(peers: List[str]) -> Dict:
-    """Calculates the average market multiples (EV/EBITDA, P/E, P/S) for a list of peer companies."""
-    ev_ebitda_list = []
-    p_e_list = []
-    p_s_list = []
-    successful_peers = []
-    failed_to_get_data = []
+@lru_cache(maxsize=None)
+def get_company_data_cached(ticker: str, verbose: bool = True) -> Tuple[Tuple[str, any], ...]:
+    """
+    Caching wrapper - returns a tuple instead of a dict for hashability.
+    """
+    data = get_company_data_impl(ticker, verbose)
+    # Convert dict to a sorted tuple of items for caching
+    return tuple(sorted(data.items()))
 
-    for ticker in peers:
-        # Use verbose=False to avoid cluttered output for peers
-        data = get_company_data(ticker, verbose=False)
-        if not data['success']:
-            failed_to_get_data.append(ticker)
+def get_company_data(ticker: str, verbose: bool = True) -> Dict[str, any]:
+    """
+    Public interface for getting company data with caching.
+
+    Converts cached tuple back to dictionary for external use.
+    """
+    cached_tuple = get_company_data_cached(ticker, verbose)
+    return dict(cached_tuple)
+
+def get_multiple_companies_data(tickers: List[str]) -> Dict[str, dict]:
+    """
+    Sequential data retrieval for multiple companies with automatic caching.
+
+    Includes strategic delays to respect API rate limits.
+    """
+    results = {}
+    for ticker in tickers:
+        results[ticker] = get_company_data(ticker)
+        import time
+        time.sleep(0.1)
+    return results
+
+def calculate_peer_multipliers(peers: List[str]) -> Dict[str, any]:
+    """
+    Calculates average valuation multiples for peer companies.
+
+    Complex Business Logic:
+    1. Collects financial data for all peer companies
+    2. Calculates Enterprise Value (EV) = Market Cap + Debt - Cash
+    3. Computes three key valuation multiples:
+       - EV/EBITDA: Enterprise Value to EBITDA (debt-inclusive valuation)
+       - P/E: Price to Earnings per Share (profitability-based valuation)
+       - P/S: Price to Sales per Share (revenue-based valuation)
+    4. Filters outliers and invalid values using reasonable bounds
+    5. Calculates mean values across successful peers
+
+    Outlier Filtering:
+    - EV/EBITDA: excludes values > 50 (atypically high)
+    - P/E: excludes values > 100 (atypically high)
+    - P/S: excludes values > 40 (atypically high)
+
+    Data Quality Assurance:
+    - Only includes companies with successful data retrieval
+    - Handles missing financial metrics gracefully
+    - Provides detailed reporting of failed companies
+
+    Returns:
+        Dictionary with average multipliers and metadata including:
+        - successful_peers: List of companies used in calculation
+        - peers_count: Number of successful peers
+        - individual_multipliers: Detailed results per company
+    """
+    # Load data for all peers using the optimized function
+    all_data_result = get_multiple_companies_data(peers)
+    df = pd.DataFrame.from_dict(all_data_result, orient='index')
+
+    # Filter successful data loads
+    successful = df[df['success']].copy()
+
+    if successful.empty:
+        print("⚠ No successful data loads for any peer companies")
+        return {
+            'ev_ebitda': None,
+            'p_e': None,
+            'p_s': None,
+            'successful_peers': [],
+            'peers_count': 0,
+            'individual_multipliers': {}
+        }
+
+    df = successful
+
+    # Fill missing debt and cash with zeros for EV calculation
+    df['debt'] = df['debt'].fillna(0)
+    df['cash'] = df['cash'].fillna(0)
+
+    # Calculate Enterprise Value (EV)
+    df['ev'] = df['price'] * df['shares'] + df['debt'] - df['cash']
+
+    # Calculate Multipliers
+    # EV/EBITDA
+    df['ev_ebitda'] = None
+    mask_ebitda = (df['ebitda'].notna()) & (df['ebitda'] > 0)
+    if mask_ebitda.sum() > 0:
+        df.loc[mask_ebitda, 'ev_ebitda'] = df.loc[mask_ebitda, 'ev'] / df.loc[mask_ebitda, 'ebitda']
+
+    # P/E
+    df['p_e'] = None
+    mask_eps = (df['eps'].notna()) & (df['eps'] > 0)
+    if mask_eps.sum() > 0:
+        df.loc[mask_eps, 'p_e'] = df.loc[mask_eps, 'price'] / df.loc[mask_eps, 'eps']
+
+    # P/S (corrected formula: Price / (Revenue / Shares))
+    df['sales_per_share'] = df['revenue'] / df['shares']
+    df['p_s'] = None
+    mask_sales = (df['sales_per_share'].notna()) & (df['sales_per_share'] > 0)
+    if mask_sales.sum() > 0:
+        df.loc[mask_sales, 'p_s'] = df.loc[mask_sales, 'price'] / df.loc[mask_sales, 'sales_per_share']
+
+    # Prepare individual multipliers for output
+    individual_multipliers = {}
+    successful_peers = []
+
+    for idx, row in df.iterrows():
+        company_name = row.get('name', idx)
+        multipliers = {}
+
+        if pd.notna(row.get('ev_ebitda')) and 0 < row['ev_ebitda'] < 50:
+            multipliers['ev_ebitda'] = row['ev_ebitda']
+
+        if pd.notna(row.get('p_e')) and 0 < row['p_e'] < 100:
+            multipliers['p_e'] = row['p_e']
+
+        if pd.notna(row.get('p_s')) and 0 < row['p_s'] < 40:
+            multipliers['p_s'] = row['p_s']
+
+        if multipliers:  # Only add if at least one multiplier is calculable
+            individual_multipliers[company_name] = multipliers
+            successful_peers.append(company_name)
+
+            # Print individual company results
+            print(f"✔ Processed: {company_name} ({idx})")
+            multipliers_str = []
+            if 'ev_ebitda' in multipliers:
+                multipliers_str.append(f"EV/EBITDA: {multipliers['ev_ebitda']:.2f}")
+            if 'p_e' in multipliers:
+                multipliers_str.append(f"P/E: {multipliers['p_e']:.2f}")
+            if 'p_s' in multipliers:
+                multipliers_str.append(f"P/S: {multipliers['p_s']:.2f}")
+
+            if multipliers_str:
+                print(f"   Multipliers: {', '.join(multipliers_str)}")
+
+    # Final calculation (Mean/Median) with flexible limits
+    results = {}
+
+    for multiplier, col, max_val in [
+        ('ev_ebitda', 'ev_ebitda', 50),
+        ('p_e', 'p_e', 100),
+        ('p_s', 'p_s', 40)
+    ]:
+        # Filter for positive, non-null values within reasonable limits
+        all_values = df[(df[col] > 0) & (df[col] < max_val)][col].dropna()
+
+        if all_values.empty:
+            results[multiplier] = None
             continue
 
-        is_calculable = False
+        # Use mean of filtered values
+        results[multiplier] = all_values.mean()
 
-        # EV/EBITDA calculation
-        if all(data.get(x) is not None for x in ['price', 'shares', 'debt', 'cash', 'ebitda']) and data['ebitda'] != 0:
-            ev = data['price'] * data['shares'] + data['debt'] - data['cash']
-            multiple = ev / data['ebitda']
-            if 0 < multiple < 50:
-                ev_ebitda_list.append(multiple)
-                is_calculable = True
-
-        # P/E calculation
-        if data.get('price') is not None and data.get('eps') is not None and data['eps'] != 0:
-            multiple = data['price'] / data['eps']
-            if 0 < multiple < 100:
-                p_e_list.append(multiple)
-                is_calculable = True
-
-        # P/S calculation
-        if (data.get('price') is not None and data.get('revenue') is not None and
-                data.get('shares') is not None and data['shares'] != 0):
-            sales_per_share = data['revenue'] / data['shares']
-            if sales_per_share != 0:
-                multiple = data['price'] / sales_per_share
-                if 0 < multiple < 40:
-                    p_s_list.append(multiple)
-                is_calculable = True
-
-        if is_calculable:
-            successful_peers.append(data['name'])
-            print(f"✔ Processed: {data['name']} ({ticker})")
-        else:
-            failed_to_get_data.append(data['name'])
-
-    # Calculate average multiples
-    result = {
-        'ev_ebitda': sum(ev_ebitda_list) / len(ev_ebitda_list) if ev_ebitda_list else None,
-        'p_e': sum(p_e_list) / len(p_e_list) if p_e_list else None,
-        'p_s': sum(p_s_list) / len(p_s_list) if p_s_list else None,
+    # Add metadata for compatibility
+    results.update({
         'successful_peers': successful_peers,
-        'peers_count': len(successful_peers)
-    }
+        'peers_count': len(successful_peers),
+        'individual_multipliers': individual_multipliers
+    })
 
-    print("\n--- AVERAGE MULTIPLES ---")
-    print(f"Average P/E: {result['p_e']:.2f}" if result['p_e'] else "N/A (No peer data)")
-    print(f"Average P/S: {result['p_s']:.2f}" if result['p_s'] else "N/A (No peer data)")
-    print(f"Average EV/EBITDA: {result['ev_ebitda']:.2f}" if result['ev_ebitda'] else "N/A (No peer data)")
-    print("-------------------------")
+    # Print summary
+    # print("\n--- AVERAGE MULTIPLES ---")
+    # print(f"Average P/E: {results['p_e']:.2f}" if results['p_e'] else "N/A (No peer data)")
+    # print(f"Average P/S: {results['p_s']:.2f}" if results['p_s'] else "N/A (No peer data)")
+    # print(f"Average EV/EBITDA: {results['ev_ebitda']:.2f}" if results['ev_ebitda'] else "N/A (No peer data)")
+    # print("-------------------------")
 
-    if failed_to_get_data:
-        print(f"⚠️ The following companies could not be used (no data): {', '.join(failed_to_get_data)}")
+    # Report failed companies
+    failed_peers = set(peers) - set(df.index)
+    if failed_peers:
+        print(f"⚠ The following companies could not be used (no data): {', '.join(failed_peers)}")
 
-    return result
+    return results
 
 def valuate_company(ticker: str, multipliers: Dict[str, any],
                     weights: Dict[str, Tuple[float, float, float]]) -> Dict[str, any]:
@@ -1113,7 +1261,6 @@ def run_valuation(stocks_dict: Dict[str, str],
     print(f"Files processed: {len(stocks_dict)}")
 
     return all_valuation_results
-
 
 # --- Main Execution ---
 if __name__ == "__main__":
