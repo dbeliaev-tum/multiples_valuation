@@ -739,7 +739,7 @@ def valuate_company(ticker: str, multipliers: Dict[str, any],
     if 'ev' in normalized_weights:
         ebitda_val = data['ebitda']
         ev = multipliers['ev_ebitda'] * ebitda_val
-        price_ev = (ev - data.get('debt', 0) + data.get('cash', 0)) / data['shares']
+        price_ev = (ev - (safe_float(data.get('debt')) or 0) + (safe_float(data.get('cash')) or 0)) / data['shares']
         if price_ev > 0:
             valuation_options.append((price_ev, normalized_weights['ev']))
             calculations['ev_ebitda'] = price_ev
